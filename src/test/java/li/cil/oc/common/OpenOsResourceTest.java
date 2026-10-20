@@ -121,6 +121,16 @@ final class OpenOsResourceTest {
     }
 
     @Test
+    void malformedLootWeightIsRejectedAndExtraFieldsRemainALegacyLabel() {
+        org.junit.jupiter.api.Assertions.assertThrows(NumberFormatException.class,
+            () -> ModLootDisks.parseDescriptor("bad", "Invalid:not-a-number:dyeBlue"));
+        final var extra = ModLootDisks.parseDescriptor("extra", "Legacy:2:dyeBlue:extra");
+        assertEquals("Legacy:2:dyeBlue:extra", extra.label());
+        assertEquals(1, extra.weight());
+        assertEquals(net.minecraft.world.item.DyeColor.LIGHT_GRAY, extra.color());
+    }
+
+    @Test
     void bundledLootFilesystemsIncludeUpstreamProgramDisks() throws IOException {
         assertBundledFile("builder", "usr/bin/build.lua");
         assertBundledFile("data", "usr/bin/base64.lua");

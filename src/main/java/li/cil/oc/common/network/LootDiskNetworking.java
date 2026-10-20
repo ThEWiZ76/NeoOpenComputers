@@ -30,10 +30,15 @@ public final class LootDiskNetworking {
     }
 
     public static List<LootDiskMetadataPayload> snapshot() {
+        return snapshot(net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer());
+    }
+
+    public static List<LootDiskMetadataPayload> snapshot(net.minecraft.server.MinecraftServer server) {
         final var packets = new ArrayList<LootDiskMetadataPayload>();
         packets.add(new LootDiskMetadataPayload(ItemStack.EMPTY));
         if (API.items instanceof ItemRegistry registry) {
-            for (final var stack : registry.registeredFloppies()) packets.add(new LootDiskMetadataPayload(stack));
+            final var stacks = server == null ? registry.registeredFloppies() : li.cil.oc.common.WorldLootDisks.registeredDisks(server, registry);
+            for (final var stack : stacks) packets.add(new LootDiskMetadataPayload(stack));
         }
         return List.copyOf(packets);
     }
@@ -46,7 +51,7 @@ public final class LootDiskNetworking {
         pendingLogins.removeIf(player -> {
             if (player.getServer() != event.getServer()) return false;
             if (!player.hasDisconnected() && event.getServer().getPlayerList().getPlayer(player.getUUID()) == player) {
-                for (final var payload : snapshot()) TerminalNetworking.sendToPlayerIfSupported(player, payload);
+                for (final var payload : snapshot(event.getServer())) TerminalNetworking.sendToPlayerIfSupported(player, payload);
             }
             return true;
         });

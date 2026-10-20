@@ -178,7 +178,9 @@ public final class ItemRegistry implements ItemAPI {
     }
 
     public Callable<FileSystem> floppyFactory(final String factoryId) {
-        return factoryId == null || factoryId.isEmpty() ? null : floppyFactoriesById.get(factoryId);
+        if (factoryId == null || factoryId.isEmpty()) return null;
+        final var worldFactory = WorldLootDisks.factory(this, factoryId);
+        return worldFactory != null ? worldFactory : floppyFactoriesById.get(factoryId);
     }
 
     static CompoundTag createFloppyData(final String name, final DyeColor color, final String factoryId, final boolean doRecipeCycling) {

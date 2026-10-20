@@ -55,8 +55,10 @@ public final class ModLootDisks {
     }
 
     public static List<ItemStack> stacksForCycling() {
-        return API.items instanceof ItemRegistry registry ? registry.disksForCycling() : List.of();
+        return API.items instanceof ItemRegistry registry ? WorldLootDisks.cycling(registry) : List.of();
     }
+
+    public static ItemStack randomDisk(net.minecraft.util.RandomSource random) { return WorldLootDisks.sample(random); }
 
     static List<Descriptor> bundledDescriptors() {
         final Properties properties = new Properties();
@@ -70,9 +72,19 @@ public final class ModLootDisks {
             return List.of();
         }
 
+        return descriptors(properties);
+    }
+
+    static List<Descriptor> descriptors(Properties properties) {
         final List<Descriptor> descriptors = new ArrayList<>();
         for (String path : new TreeSet<>(properties.stringPropertyNames())) {
-            descriptors.add(parseDescriptor(path, properties.getProperty(path)));
+            try {
+                if (path.isEmpty() || java.nio.file.Path.of(path).isAbsolute() || path.startsWith("\\")) throw new IllegalArgumentException("loot path must be relative");
+                FileSystemRegistry.pathSegments(path);
+                descriptors.add(parseDescriptor(path, properties.getProperty(path)));
+            } catch (IllegalArgumentException failure) {
+                NeoOpenComputers.LOGGER.warn("Skipping invalid loot descriptor {}={}", path, properties.getProperty(path));
+            }
         }
         return List.copyOf(descriptors);
     }
@@ -98,6 +110,10 @@ public final class ModLootDisks {
         if (!(items instanceof ItemRegistry registry)) {
             return ItemStack.EMPTY;
         }
+        return descriptorStack(descriptor, registry);
+    }
+
+    static ItemStack descriptorStack(Descriptor descriptor, ItemRegistry registry) {
         final var info = registry.get(ModContentIds.FLOPPY);
         if (info == null) {
             return ItemStack.EMPTY;
@@ -117,21 +133,13 @@ public final class ModLootDisks {
 
     static Descriptor parseDescriptor(final String path, final String value) {
         final String[] parts = value.split(":");
-        if (parts.length >= 3) {
-            return new Descriptor(path, parts[0], nonNegativeInt(parts[1]), dyeColor(parts[2]));
+        if (parts.length == 3) {
+            return new Descriptor(path, parts[0], Math.max(0, Integer.parseInt(parts[1])), dyeColor(parts[2]));
         }
         if (parts.length == 2) {
-            return new Descriptor(path, parts[0], nonNegativeInt(parts[1]), DyeColor.LIGHT_GRAY);
+            return new Descriptor(path, parts[0], Math.max(0, Integer.parseInt(parts[1])), DyeColor.LIGHT_GRAY);
         }
         return new Descriptor(path, value, 1, DyeColor.LIGHT_GRAY);
-    }
-
-    private static int nonNegativeInt(final String value) {
-        try {
-            return Math.max(0, Integer.parseInt(value));
-        } catch (NumberFormatException e) {
-            return 1;
-        }
     }
 
     private static DyeColor dyeColor(final String oreName) {

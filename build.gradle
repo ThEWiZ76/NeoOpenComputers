@@ -124,6 +124,12 @@ runs {
         argument '--nogui'
     }
     gameTestServer {
+        if (project.hasProperty('neoopencomputers.testWorldLoot')) {
+            if (!project.hasProperty('neoopencomputers.gameTestWorld')) {
+                throw new GradleException('World loot probes require an isolated oc-tests-* world.')
+            }
+            systemProperty 'neoopencomputers.testWorldLoot', 'true'
+        }
         if (project.hasProperty('neoopencomputers.gameTestWorld')) {
             def world = project.property('neoopencomputers.gameTestWorld').toString()
             if (project.hasProperty('neoopencomputers.restartPhase') || !(world ==~ /oc-tests-[a-zA-Z0-9_-]+/)) {

@@ -90,6 +90,7 @@ public final class NeoOpenComputers {
         WirelessNetworkCardHandler.register();
         NeoForge.EVENT_BUS.addListener(ModCommands::register);
         LootDiskNetworking.registerServerEvents();
+        li.cil.oc.common.WorldLootDisks.registerServerEvents();
         NanomachinesRegistry.registerTickHandler();
         li.cil.oc.common.HoverBootsHandler.register();
         li.cil.oc.common.PresentHandler.register();
