@@ -132,8 +132,8 @@ public class HardDiskDriveItem extends Item implements DriverItem {
         if (isUnmanaged(data) != unmanaged) {
             data.remove(LOCK_TAG);
             data.getCompound("node").remove("address");
-            // NBT-backed volumes must not resurrect the storage belonging to the previous address.
-            for (final var key : List.of("fs", "owners", "data", "headPos")) data.remove(key);
+            // A real format must not resurrect the storage belonging to the previous address.
+            for (final var key : List.of("fs", "owners", "data", "headPos", li.cil.oc.common.NativeVolumeStore.RAW_STORAGE_TAG)) data.remove(key);
         }
         data.putBoolean(UNMANAGED_TAG, unmanaged);
     }

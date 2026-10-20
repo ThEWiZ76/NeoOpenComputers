@@ -28,6 +28,57 @@ public final class NativeDiskStorageGameTests {
     private static final byte[] BYTES = {97, 0, (byte) 128, (byte) 255, 42};
 
     @GameTest(template = "empty")
+    public static void nativeRawDisksStoreGzipBytesAndRestoreHeadAndLabels(GameTestHelper helper) throws Exception {
+        final var world = helper.getLevel().getServer().getWorldPath(LevelResource.ROOT).resolve("opencomputers");
+        for (final var item : List.of(ModItems.HDD_TIER1.get(), ModItems.HDD_TIER2.get(), ModItems.HDD_TIER3.get(), ModItems.FLOPPY.get())) {
+            final var stack = new ItemStack(item); HardDiskDriveItem.setUnmanaged(stack, true);
+            final var env = environment(stack); final var fs = (Component) env.node(); final var saved = new CompoundTag();
+            try {
+                fs.invoke("writeSector", null, 1, BYTES); fs.invoke("writeByte", null, 4097, 42); fs.invoke("setLabel", null, "Raw fixture");
+                env.save(saved);
+            } finally { env.node().remove(); }
+            final var binding = saved.getString(NativeVolumeStore.RAW_STORAGE_TAG);
+            helper.assertTrue(!saved.contains("data") && binding.equals(saved.getCompound("node").getString("address") + ".bin"), "Native raw disk still embeds its bytes instead of a compressed world binding");
+            try (var stream = new java.util.zip.GZIPInputStream(Files.newInputStream(world.resolve(binding)))) {
+                final var bytes = stream.readAllBytes();
+                helper.assertTrue(Arrays.equals(BYTES, Arrays.copyOf(bytes, BYTES.length)) && bytes[4096] == 42, "Raw GZIP world bytes differ");
+            }
+            HardDiskDriveItem.lock(HardDiskDriveItem.stackDataTag(stack), "Raw owner");
+            final var restored = environment(stack);
+            try {
+                final var checkpoint = new CompoundTag(); restored.save(checkpoint);
+                helper.assertTrue(checkpoint.getInt("headPos") == saved.getInt("headPos") && checkpoint.getString("oc:lock").equals("Raw owner"), "Raw head/lock state was lost on remount");
+                final var drive = (Component) restored.node();
+                helper.assertTrue(saved.getCompound("node").getString("address").equals(restored.node().address()) && "Raw fixture".equals(drive.invoke("getLabel", null)[0]), "Raw label or identity changed");
+                helper.assertTrue(((Number) drive.invoke("readByte", null, 4)[0]).intValue() == -1 && ((Number) drive.invoke("readByte", null, 4097)[0]).intValue() == 42, "Raw binary data changed on remount");
+            } finally { restored.node().remove(); }
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void nativeRawDiskImportsAnOldInlineSnapshotWithoutMutatingIt(GameTestHelper helper) throws Exception {
+        final var producer = new li.cil.oc.common.DriveEnvironment(512, 1, new ItemDiskLabel("Old raw"), null, null, 1, "");
+        final var node = new CompoundTag(); node.putString("address", "old-raw-game-fixture"); producer.node().load(node);
+        li.cil.oc.api.Network.joinNewNetwork(producer.node());
+        final var source = new CompoundTag();
+        try { ((Component) producer.node()).invoke("writeSector", null, 1, BYTES); producer.save(source); }
+        finally { producer.node().remove(); }
+        source.putString("oc:lock", "Old owner");
+        final var before = source.copy(); final var saved = new CompoundTag();
+        final var env = FloppyItem.createWritableEnvironment(source, ignored -> {}, new CompoundTag(), null);
+        li.cil.oc.api.Network.joinNewNetwork(env.node());
+        try {
+            final var fs = (Component) env.node();
+            helper.assertTrue(Arrays.equals(BYTES, Arrays.copyOf((byte[]) fs.invoke("readSector", null, 1)[0], BYTES.length)), "Legacy raw bytes were not imported");
+            helper.assertTrue(source.equals(before) && env.node().address().equals("old-raw-game-fixture"), "Legacy raw source or visible identity changed");
+            env.save(saved);
+            helper.assertTrue(!saved.contains("data") && saved.getString(NativeVolumeStore.RAW_STORAGE_TAG).startsWith("native-legacy/"), "Legacy raw disk did not publish its safe external binding");
+        } finally { env.node().remove(); }
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void nativeManagedDisksStoreBytesInTheActiveWorld(GameTestHelper helper) throws Exception {
         final var world = helper.getLevel().getServer().getWorldPath(LevelResource.ROOT).resolve("opencomputers");
         for (final var item : List.of(ModItems.HDD_TIER1.get(), ModItems.HDD_TIER2.get(), ModItems.HDD_TIER3.get(), ModItems.FLOPPY.get())) {

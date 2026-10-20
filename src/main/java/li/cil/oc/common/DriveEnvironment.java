@@ -18,6 +18,8 @@ import net.neoforged.neoforge.common.NeoForge;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
 public final class DriveEnvironment extends AbstractManagedEnvironment implements DeviceInfo {
     private static final String DATA_TAG = "data";
@@ -37,9 +39,15 @@ public final class DriveEnvironment extends AbstractManagedEnvironment implement
     private final Optional<String> accessSound;
     private final int costIndex;
     private final String lockInfo;
+    private final NativeVolumeStore.RawMount storage;
     private int headPos;
 
     public DriveEnvironment(final int capacity, final int platterCount, final Label label, final EnvironmentHost host, final String accessSound, final int speed, final String lockInfo) {
+        this(capacity, platterCount, label, host, accessSound, speed, lockInfo, null);
+    }
+
+    public DriveEnvironment(final int capacity, final int platterCount, final Label label, final EnvironmentHost host, final String accessSound, final int speed, final String lockInfo,
+                            final NativeVolumeStore.RawMount storage) {
         this.data = new byte[Math.max(0, capacity)];
         this.platterCount = Math.max(1, platterCount);
         this.label = label;
@@ -47,6 +55,7 @@ public final class DriveEnvironment extends AbstractManagedEnvironment implement
         this.accessSound = Optional.ofNullable(accessSound);
         this.costIndex = Math.max(0, Math.min(speed, READ_SECTOR_COSTS.length - 1));
         this.lockInfo = lockInfo == null ? "" : lockInfo;
+        this.storage = storage;
         setNode(Network.newNode(this, Visibility.Network)
             .withComponent("drive", Visibility.Neighbors)
             .withConnector()
@@ -68,12 +77,12 @@ public final class DriveEnvironment extends AbstractManagedEnvironment implement
     }
 
     @Callback(direct = true, doc = "function():string -- Get the current label of the drive.")
-    public Object[] getLabel(final Context context, final Arguments arguments) {
+    public synchronized Object[] getLabel(final Context context, final Arguments arguments) {
         return label == null ? null : new Object[]{label.getLabel()};
     }
 
     @Callback(doc = "function(value:string):string -- Sets the label of the drive. Returns the new value, which may be truncated.")
-    public Object[] setLabel(final Context context, final Arguments arguments) throws Exception {
+    public synchronized Object[] setLabel(final Context context, final Arguments arguments) throws Exception {
         if (locked()) {
             throw new Exception("drive is read only");
         }
@@ -101,7 +110,7 @@ public final class DriveEnvironment extends AbstractManagedEnvironment implement
     }
 
     @Callback(direct = true, doc = "function(sector:number):string -- Read the current contents of the specified sector.")
-    public Object[] readSector(final Context context, final Arguments arguments) {
+    public synchronized Object[] readSector(final Context context, final Arguments arguments) {
         consumeCallBudget(context, READ_SECTOR_COSTS[costIndex]);
         final int sector = moveToSector(context, checkSector(arguments.checkInteger(0) - 1));
         diskActivity();
@@ -109,7 +118,7 @@ public final class DriveEnvironment extends AbstractManagedEnvironment implement
     }
 
     @Callback(direct = true, doc = "function(sector:number,value:string) -- Write the specified contents to the specified sector.")
-    public Object[] writeSector(final Context context, final Arguments arguments) throws Exception {
+    public synchronized Object[] writeSector(final Context context, final Arguments arguments) throws Exception {
         if (locked()) {
             throw new Exception("drive is read only");
         }
@@ -122,7 +131,7 @@ public final class DriveEnvironment extends AbstractManagedEnvironment implement
     }
 
     @Callback(direct = true, doc = "function(offset:number):number -- Read a single byte at the specified offset.")
-    public Object[] readByte(final Context context, final Arguments arguments) {
+    public synchronized Object[] readByte(final Context context, final Arguments arguments) {
         consumeCallBudget(context, READ_BYTE_COSTS[costIndex]);
         final int offset = arguments.checkInteger(0) - 1;
         moveToSector(context, checkSector(offsetSector(offset)));
@@ -131,7 +140,7 @@ public final class DriveEnvironment extends AbstractManagedEnvironment implement
     }
 
     @Callback(direct = true, doc = "function(offset:number,value:number) -- Write a single byte to the specified offset.")
-    public Object[] writeByte(final Context context, final Arguments arguments) throws Exception {
+    public synchronized Object[] writeByte(final Context context, final Arguments arguments) throws Exception {
         if (locked()) {
             throw new Exception("drive is read only");
         }
@@ -145,24 +154,40 @@ public final class DriveEnvironment extends AbstractManagedEnvironment implement
     }
 
     @Override
-    public void load(final CompoundTag nbt) {
-        super.load(nbt);
-        if (nbt.contains(DATA_TAG, Tag.TAG_BYTE_ARRAY)) {
-            final byte[] saved = nbt.getByteArray(DATA_TAG);
-            System.arraycopy(saved, 0, data, 0, Math.min(saved.length, data.length));
+    public synchronized void load(final CompoundTag nbt) {
+        final byte[] saved;
+        if (storage != null) {
+            if (nbt.contains(NativeVolumeStore.RAW_STORAGE_TAG) && !storage.storageRoot().equals(nbt.getString(NativeVolumeStore.RAW_STORAGE_TAG))) {
+                throw new IllegalArgumentException("Cannot replace an open raw drive's storage binding");
+            }
+            if (!nbt.contains(NativeVolumeStore.RAW_STORAGE_TAG) && !nbt.getCompound("node").getString("address").isEmpty()
+                && !storage.nodeAddress().equals(nbt.getCompound("node").getString("address"))) throw new IllegalArgumentException("Inconsistent legacy raw drive identity");
+            try { saved = storage.volume().load(nbt); }
+            catch (IOException failure) { throw new UncheckedIOException("Cannot load raw drive", failure); }
+        } else {
+            if (nbt.contains(NativeVolumeStore.RAW_STORAGE_TAG)) throw new IllegalArgumentException("External raw drive requires world storage");
+            saved = nbt.contains(DATA_TAG, Tag.TAG_BYTE_ARRAY) ? nbt.getByteArray(DATA_TAG) : new byte[0];
         }
-        headPos = Math.max(0, Math.min(nbt.getInt(HEAD_POS_TAG), sectorToHeadPos(sectorCount())));
+        super.load(nbt);
+        Arrays.fill(data, (byte) 0);
+        System.arraycopy(saved, 0, data, 0, Math.min(saved.length, data.length));
+        headPos = Math.max(0, Math.min(nbt.getInt(HEAD_POS_TAG), sectorsPerPlatter() - 1));
         if (label != null) {
             label.load(nbt);
         }
     }
 
     @Override
-    public void save(final CompoundTag nbt) {
+    public synchronized void save(final CompoundTag nbt) {
+        if (storage != null) {
+            try { storage.volume().save(data); }
+            catch (IOException failure) { throw new UncheckedIOException("Cannot save raw drive", failure); }
+            nbt.remove(DATA_TAG);
+            nbt.putString(NativeVolumeStore.RAW_STORAGE_TAG, storage.storageRoot());
+        } else nbt.put(DATA_TAG, new ByteArrayTag(data.clone()));
         super.save(nbt);
         nbt.putBoolean(UNMANAGED_TAG, true);
         nbt.putString(LOCK_TAG, lockInfo);
-        nbt.put(DATA_TAG, new ByteArrayTag(data));
         nbt.putInt(HEAD_POS_TAG, headPos);
         if (label != null) {
             label.save(nbt);

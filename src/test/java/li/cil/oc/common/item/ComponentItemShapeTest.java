@@ -187,7 +187,7 @@ final class ComponentItemShapeTest {
     void hardDiskDrivePersistsFilesystemMetadataInStackAndBytesInWorld() throws Exception {
         OpenComputersApi.initialize();
         CompoundTag stackData = new CompoundTag();
-        ManagedEnvironment first = managedHdd(0, stackData, saved -> stackData.put("disk", saved.copy()));
+        ManagedEnvironment first = storedHdd(0, stackData, saved -> stackData.put("disk", saved.copy()));
         Component firstComponent = assertInstanceOf(Component.class, first.node());
         charge(first, 1D);
         Object handle = firstComponent.invoke("open", null, "boot.txt", "w")[0];
@@ -197,7 +197,7 @@ final class ComponentItemShapeTest {
         first.save(new CompoundTag());
         first.node().remove();
         assertTrue(!stackData.getCompound("disk").getCompound("fs").contains("children"));
-        ManagedEnvironment second = managedHdd(0, stackData.getCompound("disk"), saved -> {});
+        ManagedEnvironment second = storedHdd(0, stackData.getCompound("disk"), saved -> {});
         Component secondComponent = assertInstanceOf(Component.class, second.node());
         charge(second, 1D);
         Object readHandle = secondComponent.invoke("open", null, "boot.txt", "r")[0];
@@ -231,14 +231,14 @@ final class ComponentItemShapeTest {
     void hardDiskDriveLabelIsWritableAndPersistsLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         final CompoundTag savedData = new CompoundTag();
-        final ManagedEnvironment first = managedHdd(0, new CompoundTag(), saved -> savedData.put("disk", saved.copy()));
+        final ManagedEnvironment first = storedHdd(0, new CompoundTag(), saved -> savedData.put("disk", saved.copy()));
         final Component firstComponent = assertInstanceOf(Component.class, first.node());
 
         assertArrayEquals(new Object[]{"abcdefghijklmnop"}, firstComponent.invoke("setLabel", null, "abcdefghijklmnopq"));
         first.save(new CompoundTag());
         first.node().remove();
 
-        final ManagedEnvironment second = managedHdd(0, savedData.getCompound("disk"), saved -> {});
+        final ManagedEnvironment second = storedHdd(0, savedData.getCompound("disk"), saved -> {});
         final Component secondComponent = assertInstanceOf(Component.class, second.node());
 
         assertArrayEquals(new Object[]{"abcdefghijklmnop"}, secondComponent.invoke("getLabel", null));
@@ -260,7 +260,7 @@ final class ComponentItemShapeTest {
         final CompoundTag data = new CompoundTag();
         data.putBoolean("oc:unmanaged", true);
 
-        final ManagedEnvironment environment = HardDiskDriveItem.createEnvironment(1, data, saved -> {}, null);
+        final ManagedEnvironment environment = storedHdd(1, data, saved -> {});
         final Component component = assertInstanceOf(Component.class, environment.node());
 
         assertEquals("drive", component.name());
@@ -274,27 +274,31 @@ final class ComponentItemShapeTest {
         assertArrayEquals(new Object[]{ModSettings.hddSize(1) * 1024}, component.invoke("getCapacity", null));
         assertArrayEquals(new Object[]{512}, component.invoke("getSectorSize", null));
         assertArrayEquals(new Object[]{4}, component.invoke("getPlatterCount", null));
+        environment.node().remove();
     }
 
     @Test
-    void unmanagedHardDiskDrivePersistsRawSectorDataInStack() throws Exception {
+    void unmanagedHardDiskDrivePersistsRawBytesInWorldAndMetadataInStack() throws Exception {
         OpenComputersApi.initialize();
         final CompoundTag data = new CompoundTag();
         data.putBoolean("oc:unmanaged", true);
         final CompoundTag savedData = new CompoundTag();
-        final ManagedEnvironment first = HardDiskDriveItem.createEnvironment(0, data, saved -> savedData.put("disk", saved.copy()), null);
+        final ManagedEnvironment first = storedHdd(0, data, saved -> savedData.put("disk", saved.copy()));
         final Component firstComponent = assertInstanceOf(Component.class, first.node());
 
         assertNull(firstComponent.invoke("writeSector", null, 1, "boot".getBytes(StandardCharsets.UTF_8)));
         assertNull(firstComponent.invoke("writeByte", null, 513, 65));
         first.save(new CompoundTag());
 
-        final ManagedEnvironment second = HardDiskDriveItem.createEnvironment(0, savedData.getCompound("disk"), saved -> {}, null);
+        assertTrue(!savedData.getCompound("disk").contains("data"));
+        assertTrue(!savedData.getCompound("disk").getString(NativeVolumeStore.RAW_STORAGE_TAG).isEmpty());
+        final ManagedEnvironment second = storedHdd(0, savedData.getCompound("disk"), saved -> {});
         final Component secondComponent = assertInstanceOf(Component.class, second.node());
         final byte[] sector = (byte[]) secondComponent.invoke("readSector", null, 1)[0];
 
         assertEquals("boot", new String(sector, 0, 4, StandardCharsets.UTF_8));
         assertArrayEquals(new Object[]{65}, secondComponent.invoke("readByte", null, 513));
+        first.node().remove(); second.node().remove();
     }
 
     @Test
@@ -303,12 +307,13 @@ final class ComponentItemShapeTest {
         final CompoundTag data = new CompoundTag();
         data.putBoolean("oc:unmanaged", true);
         data.putString("oc:lock", "tester");
-        final ManagedEnvironment environment = HardDiskDriveItem.createEnvironment(data, saved -> {}, null);
+        final ManagedEnvironment environment = storedHdd(0, data, saved -> {});
         final Component component = assertInstanceOf(Component.class, environment.node());
 
         assertThrows(Exception.class, () -> component.invoke("setLabel", null, "locked"));
         assertThrows(Exception.class, () -> component.invoke("writeSector", null, 1, "x".getBytes(StandardCharsets.UTF_8)));
         assertThrows(Exception.class, () -> component.invoke("writeByte", null, 1, 1));
+        environment.node().remove();
     }
 
     @Test
@@ -351,7 +356,7 @@ final class ComponentItemShapeTest {
         CompoundTag savedData = new CompoundTag();
 
         withCachedConfig(ModSettings.FLOPPY_SIZE, 2, () -> {
-            ManagedEnvironment first = managedFloppy(new CompoundTag(), saved -> savedData.put("disk", saved.copy()));
+            ManagedEnvironment first = storedFloppy(new CompoundTag(), saved -> savedData.put("disk", saved.copy()));
             Component firstComponent = assertInstanceOf(Component.class, first.node());
             charge(first, 1D);
             assertEquals(2L * 1024L, firstComponent.invoke("spaceTotal", null)[0]);
@@ -361,7 +366,7 @@ final class ComponentItemShapeTest {
             first.save(new CompoundTag());
             first.node().remove();
 
-            ManagedEnvironment second = managedFloppy(savedData.getCompound("disk"), saved -> {});
+            ManagedEnvironment second = storedFloppy(savedData.getCompound("disk"), saved -> {});
             Component secondComponent = assertInstanceOf(Component.class, second.node());
             charge(second, 1D);
             Object readHandle = secondComponent.invoke("open", null, "note.txt", "r")[0];
@@ -376,14 +381,14 @@ final class ComponentItemShapeTest {
     void blankFloppyLabelIsWritableAndPersistsLikeUpstream() throws Exception {
         OpenComputersApi.initialize();
         final CompoundTag savedData = new CompoundTag();
-        final ManagedEnvironment first = managedFloppy(new CompoundTag(), saved -> savedData.put("disk", saved.copy()));
+        final ManagedEnvironment first = storedFloppy(new CompoundTag(), saved -> savedData.put("disk", saved.copy()));
         final Component firstComponent = assertInstanceOf(Component.class, first.node());
 
         assertArrayEquals(new Object[]{"abcdefghijklmnop"}, firstComponent.invoke("setLabel", null, "abcdefghijklmnopq"));
         first.save(new CompoundTag());
         first.node().remove();
 
-        final ManagedEnvironment second = managedFloppy(savedData.getCompound("disk"), saved -> {});
+        final ManagedEnvironment second = storedFloppy(savedData.getCompound("disk"), saved -> {});
         final Component secondComponent = assertInstanceOf(Component.class, second.node());
 
         assertArrayEquals(new Object[]{"abcdefghijklmnop"}, secondComponent.invoke("getLabel", null));
@@ -819,7 +824,7 @@ final class ComponentItemShapeTest {
     }
 
     private void assertHardDiskCapacity(final int tier, final long expectedCapacity) throws Exception {
-        final ManagedEnvironment environment = managedHdd(tier, new CompoundTag(), saved -> {});
+        final ManagedEnvironment environment = storedHdd(tier, new CompoundTag(), saved -> {});
         final Component component = assertInstanceOf(Component.class, environment.node());
 
         assertEquals(expectedCapacity, component.invoke("spaceTotal", null)[0]);
@@ -827,21 +832,21 @@ final class ComponentItemShapeTest {
     }
 
     private void assertHardDiskClock(final int tier, final String expectedClock) {
-        final ManagedEnvironment environment = managedHdd(tier, new CompoundTag(), saved -> {});
+        final ManagedEnvironment environment = storedHdd(tier, new CompoundTag(), saved -> {});
         final DeviceInfo info = assertInstanceOf(DeviceInfo.class, environment);
 
         assertEquals(expectedClock, info.getDeviceInfo().get(DeviceInfo.DeviceAttribute.Clock));
         environment.node().remove();
     }
 
-    private ManagedEnvironment managedHdd(int tier, CompoundTag data, Consumer<CompoundTag> save) {
+    private ManagedEnvironment storedHdd(int tier, CompoundTag data, Consumer<CompoundTag> save) {
         final var env = DiskItemEnvironment.create(ModSettings.hddSize(tier) * 1024L, ModSettings.hddPlatterCount(tier), tier + 2,
             ModSounds.HDD_ACCESS_ID, data, save, null, null, new NativeVolumeStore(diskWorld));
         li.cil.oc.api.Network.joinNewNetwork(env.node());
         return env;
     }
 
-    private ManagedEnvironment managedFloppy(CompoundTag data, Consumer<CompoundTag> save) {
+    private ManagedEnvironment storedFloppy(CompoundTag data, Consumer<CompoundTag> save) {
         final var env = DiskItemEnvironment.create(ModSettings.floppySize() * 1024L, 1, 1, ModSounds.FLOPPY_ACCESS_ID,
             data, save, null, null, new NativeVolumeStore(diskWorld));
         li.cil.oc.api.Network.joinNewNetwork(env.node());
@@ -849,10 +854,13 @@ final class ComponentItemShapeTest {
     }
 
     @Test
-    void nativeManagedFactoriesRequireAnActiveServer() {
+    void nativeDiskFactoriesRequireAnActiveServer() {
         OpenComputersApi.initialize();
-        assertNull(HardDiskDriveItem.createEnvironment(new CompoundTag(), saved -> {}, null));
-        assertNull(FloppyItem.createWritableEnvironment(new CompoundTag(), saved -> {}, new CompoundTag(), null));
+        for (final boolean raw : List.of(false, true)) {
+            final var data = new CompoundTag(); data.putBoolean("oc:unmanaged", raw);
+            assertNull(HardDiskDriveItem.createEnvironment(data, saved -> {}, null));
+            assertNull(FloppyItem.createWritableEnvironment(data, saved -> {}, new CompoundTag(), null));
+        }
     }
 
     private static CpuItem cpu(final int tier) throws Exception {

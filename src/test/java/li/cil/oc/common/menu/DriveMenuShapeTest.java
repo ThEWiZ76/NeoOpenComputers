@@ -67,10 +67,11 @@ final class DriveMenuShapeTest {
         final var node = new CompoundTag(); node.putString("address", "old-volume"); node.putString("custom", "keep");
         data.put("node", node); data.put("fs", new CompoundTag());
         data.put("owners", new net.minecraft.nbt.ListTag()); data.putByteArray("data", new byte[]{0, (byte) 255}); data.putInt("headPos", 3);
+        data.putString(li.cil.oc.common.NativeVolumeStore.RAW_STORAGE_TAG, "11111111-2222-3333-4444-555555555555.bin");
         data.putString("oc:fs.label", "Keep label"); data.putString("addon:marker", "keep"); data.putString("oc:lock", "owner");
         HardDiskDriveItem.setUnmanaged(data, true);
         assertFalse(data.getCompound("node").contains("address"));
-        for (final var key : java.util.List.of("fs", "owners", "data", "headPos", "oc:lock")) assertFalse(data.contains(key), key);
+        for (final var key : java.util.List.of("fs", "owners", "data", "headPos", "oc:lock", li.cil.oc.common.NativeVolumeStore.RAW_STORAGE_TAG)) assertFalse(data.contains(key), key);
         assertEquals("keep", data.getCompound("node").getString("custom"));
         assertEquals("Keep label", data.getString("oc:fs.label")); assertEquals("keep", data.getString("addon:marker"));
         assertTrue(HardDiskDriveItem.isUnmanaged(data));
@@ -80,6 +81,7 @@ final class DriveMenuShapeTest {
     void sameModePreservesStorageIdentityAndLock() {
         final var data = new CompoundTag(); data.putBoolean("oc:unmanaged", true);
         data.putString("oc:lock", "owner"); data.putByteArray("data", new byte[]{0, (byte) 255});
+        data.putString(li.cil.oc.common.NativeVolumeStore.RAW_STORAGE_TAG, "11111111-2222-3333-4444-555555555555.bin");
         final var node = new CompoundTag(); node.putString("address", "same-volume"); data.put("node", node);
         final var before = data.copy(); HardDiskDriveItem.setUnmanaged(data, true);
         assertEquals(before, data);

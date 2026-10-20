@@ -177,6 +177,7 @@ public final class WorldLootProcessRestartGameTests {
             helper.assertTrue(HardDiskDriveItem.lockInfo(computer.getItem(ComputerCaseBlockEntity.SLOT_HDD)).equals("Fixture owner"), "Managed HDD lock lost across JVM restart");
             managedBacking(helper, computer.getItem(ComputerCaseBlockEntity.SLOT_HDD));
             managedBacking(helper, floppyDrive.getItem(0));
+            rawBacking(helper, rawDrive.getItem(0));
             helper.assertTrue(computer.machine().isRunning() && computer.machine().signal("resume_world_loot"), "World loot VM did not retain running state");
         }
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(marker(computer).equals(prepare ? "world-loot-waiting" : "world-loot-resumed"), "World loot continuation failed: " + computer.machine().lastError()))
@@ -185,6 +186,7 @@ public final class WorldLootProcessRestartGameTests {
                 computer.saveWithFullMetadata(level.registryAccess());
                 managedBacking(helper, computer.getItem(ComputerCaseBlockEntity.SLOT_HDD));
                 managedBacking(helper, floppyDrive.getItem(0));
+                rawBacking(helper, rawDrive.getItem(0));
                 helper.assertTrue(HardDiskDriveItem.lockInfo(computer.getItem(ComputerCaseBlockEntity.SLOT_HDD)).equals("Fixture owner"), "Saving resumed native host discarded the HDD lock");
                 for (final var disk : List.of(rawDrive.getItem(0), floppyDrive.getItem(0))) helper.assertTrue(HardDiskDriveItem.lockInfo(disk).equals("Fixture owner"), "Saving storage host discarded a floppy lock");
                 helper.assertTrue(HardDiskDriveItem.isUnmanaged(rawDrive.getItem(0)) && !HardDiskDriveItem.isUnmanaged(floppyDrive.getItem(0)), "Floppy modes changed at save/restart");
@@ -230,6 +232,20 @@ public final class WorldLootProcessRestartGameTests {
         try {
             final var path = helper.getLevel().getServer().getWorldPath(LevelResource.ROOT).resolve("opencomputers").resolve(binding).resolve("probe.bin");
             helper.assertTrue(Arrays.equals(Files.readAllBytes(path), new byte[]{97, 0, (byte) 128, (byte) 255, 42}), "Native managed world file differs at JVM checkpoint");
+        } catch (java.io.IOException failure) { throw new java.io.UncheckedIOException(failure); }
+    }
+
+    private static void rawBacking(GameTestHelper helper, ItemStack disk) {
+        final var metadata = HardDiskDriveItem.stackDataTag(disk);
+        final var binding = metadata.getString(NativeVolumeStore.RAW_STORAGE_TAG);
+        helper.assertTrue(!metadata.contains("data") && binding.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.bin"),
+            "Native raw restart disk has no compressed world binding or still embeds its bytes");
+        try {
+            final var path = helper.getLevel().getServer().getWorldPath(LevelResource.ROOT).resolve("opencomputers").resolve(binding);
+            try (var stream = new java.util.zip.GZIPInputStream(Files.newInputStream(path))) {
+                final var bytes = stream.readAllBytes();
+                helper.assertTrue(bytes.length == li.cil.oc.common.ModSettings.floppySize() * 1024L && bytes[0] == (byte) 255, "Native raw compressed bytes differ at JVM checkpoint");
+            }
         } catch (java.io.IOException failure) { throw new java.io.UncheckedIOException(failure); }
     }
 }

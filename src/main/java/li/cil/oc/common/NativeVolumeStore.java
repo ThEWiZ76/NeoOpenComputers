@@ -8,6 +8,7 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.Tag;
 
 import java.io.DataOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
@@ -29,10 +30,14 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Supplier;
+import java.util.concurrent.Callable;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /** Imports old inline volumes before callers omit their contents from subsequent snapshots. */
 public final class NativeVolumeStore {
     public static final String STORAGE_TAG = "oc:storage";
+    public static final String RAW_STORAGE_TAG = "oc:rawStorage";
     private static final String UUID_PATTERN = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
     private static final Object OPEN_LOCK = new Object();
     private final Path world;
@@ -46,6 +51,154 @@ public final class NativeVolumeStore {
     }
 
     public record Mount(String storageRoot, String nodeAddress, FileSystem fileSystem) { }
+
+    public record RawMount(String storageRoot, String nodeAddress, RawVolume volume) { }
+
+    public RawMount openRaw(CompoundTag original, int capacity) throws IOException {
+        if (capacity < 0) throw new IllegalArgumentException("Negative raw volume capacity");
+        synchronized (OPEN_LOCK) {
+            final var source = original.copy();
+            if (source.contains("node") && !source.contains("node", Tag.TAG_COMPOUND)
+                || source.getCompound("node").contains("address") && !source.getCompound("node").contains("address", Tag.TAG_STRING)) throw new IOException("Malformed raw volume address");
+            String address = source.getCompound("node").getString("address");
+            if (address.isEmpty()) address = Objects.requireNonNull(addresses.get());
+            final boolean bound = source.contains(RAW_STORAGE_TAG);
+            final String root = bound ? source.getString(RAW_STORAGE_TAG)
+                : (address.matches(UUID_PATTERN) ? address : "native-legacy/" + hash(address)) + ".bin";
+            if (!root.matches(UUID_PATTERN + "\\.bin") && !root.matches("native-legacy/[0-9a-f]{64}\\.bin")) throw new IOException("Invalid raw storage binding");
+            final boolean inline = source.contains("data");
+            if (inline && !source.contains("data", Tag.TAG_BYTE_ARRAY)) throw new IOException("Malformed inline raw bytes");
+            final byte[] bytes = inline ? source.getByteArray("data") : null;
+            if (inline && bytes.length > capacity) throw new IOException("Inline raw volume exceeds current capacity");
+            final String digest = inline ? rawDigest(bytes) : null;
+            final var volume = rawIO(() -> {
+                final var target = checked(world.resolve("opencomputers").resolve(root));
+                final var journals = checked(world.resolve("opencomputers/.native-imports"));
+                final var journal = checked(journals.resolve(hash(root) + ".nbt"));
+                final var previous = Files.exists(journal, LinkOption.NOFOLLOW_LINKS) ? readJournal(journal, root) : null;
+                if (previous != null) {
+                    if (inline && !digest.equals(previous.getString("digest"))) throw new IOException("Conflicting inline raw snapshot");
+                    if (!previous.getBoolean("complete")) {
+                        if (!inline) throw new IOException("Pending raw import requires its original inline bytes");
+                        importRaw(target, bytes, capacity);
+                        writeJournal(journal, root, digest, true, true);
+                    } else if (!Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) throw new IOException("Completed raw volume is missing");
+                } else if (inline) {
+                    if (Files.exists(target, LinkOption.NOFOLLOW_LINKS) && !Arrays.equals(readRaw(target, capacity).data, bytes)) throw new IOException("Raw import destination conflicts with inline bytes");
+                    Files.createDirectories(journals);
+                    writeJournal(journal, root, digest, false, false);
+                    importRaw(target, bytes, capacity);
+                    writeJournal(journal, root, digest, true, true);
+                } else if (bound && !Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) throw new IOException("Bound raw volume is missing");
+                final var image = Files.exists(target, LinkOption.NOFOLLOW_LINKS) ? readRaw(target, capacity) : null;
+                return new RawVolume(root, capacity, image, inline ? digest : previous == null ? null : previous.getString("digest"));
+            });
+            return new RawMount(root, address, volume);
+        }
+    }
+
+    public final class RawVolume {
+        private final String root;
+        private final int capacity;
+        private final String importDigest;
+        private String expectedCompressedDigest;
+        private String expectedContentDigest;
+
+        private RawVolume(String root, int capacity, RawImage expected, String importDigest) {
+            this.root = root; this.capacity = capacity;
+            this.importDigest = importDigest;
+            if (expected != null) remember(expected);
+        }
+
+        private void remember(RawImage image) {
+            expectedCompressedDigest = image.compressedDigest;
+            expectedContentDigest = image.contentDigest;
+        }
+
+        public byte[] load() throws IOException {
+            return rawIO(() -> {
+                final var path = checked(world.resolve("opencomputers").resolve(root));
+                if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+                    if (expectedCompressedDigest != null) throw new IOException("Open raw volume is missing");
+                    return new byte[0];
+                }
+                if (expectedCompressedDigest == null) throw new IOException("Raw volume appeared after mount");
+                final var image = readRaw(path, capacity);
+                remember(image);
+                return image.data;
+            });
+        }
+
+        public byte[] load(CompoundTag metadata) throws IOException {
+            if (metadata.contains("data") && (!metadata.contains("data", Tag.TAG_BYTE_ARRAY) || importDigest == null
+                || !importDigest.equals(rawDigest(metadata.getByteArray("data"))))) throw new IOException("Late inline raw snapshot was not imported by this mount");
+            return load();
+        }
+
+        public void save(byte[] bytes) throws IOException {
+            if (bytes.length != capacity) throw new IOException("Raw snapshot differs from configured capacity");
+            final var snapshot = bytes.clone();
+            rawIO(() -> {
+                final var path = checked(world.resolve("opencomputers").resolve(root));
+                if (expectedCompressedDigest == null) {
+                    if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) throw new IOException("Raw volume appeared after mount");
+                } else {
+                    final var actual = readRaw(path, capacity);
+                    if (!actual.compressedDigest.equals(expectedCompressedDigest)) throw new IOException("Raw volume changed outside this mount");
+                    if (rawDigest(snapshot).equals(expectedContentDigest)) return null;
+                }
+                Files.createDirectories(path.getParent());
+                writeRaw(checked(path), snapshot, expectedCompressedDigest != null);
+                remember(readRaw(path, capacity));
+                return null;
+            });
+        }
+    }
+
+    private record RawImage(byte[] data, String compressedDigest, String contentDigest) { }
+
+    private void importRaw(Path target, byte[] bytes, int capacity) throws IOException {
+        if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)) {
+            if (!Arrays.equals(readRaw(target, capacity).data, bytes)) throw new IOException("Pending raw import conflicts with existing bytes");
+        } else {
+            Files.createDirectories(target.getParent());
+            writeRaw(checked(target), bytes, false);
+            if (!Arrays.equals(readRaw(target, capacity).data, bytes)) throw new IOException("Imported raw bytes differ");
+        }
+    }
+
+    private static RawImage readRaw(Path path, int capacity) throws IOException {
+        if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS) || Files.size(path) > capacity * 2L + 65536) throw new IOException("Invalid raw volume file");
+        final var compressed = Files.readAllBytes(path);
+        try (var stream = new GZIPInputStream(new ByteArrayInputStream(compressed))) {
+            final var bytes = stream.readNBytes(capacity);
+            if (stream.read() != -1) throw new IOException("Raw volume exceeds current capacity");
+            return new RawImage(bytes, rawDigest(compressed), rawDigest(bytes));
+        }
+    }
+
+    private static void writeRaw(Path path, byte[] bytes, boolean replace) throws IOException {
+        final var temporary = Files.createTempFile(path.getParent(), ".oc-raw-", ".tmp");
+        try {
+            try (var stream = new GZIPOutputStream(Files.newOutputStream(temporary))) { stream.write(bytes); }
+            force(temporary);
+            if (!replace) Files.move(temporary, path);
+            else {
+                try { Files.move(temporary, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING); }
+                catch (AtomicMoveNotSupportedException failure) { Files.move(temporary, path, StandardCopyOption.REPLACE_EXISTING); }
+            }
+        } finally { Files.deleteIfExists(temporary); }
+    }
+
+    private static String rawDigest(byte[] bytes) { return HexFormat.of().formatHex(sha256().digest(bytes)); }
+
+    private static <T> T rawIO(Callable<T> work) throws IOException {
+        try { return BufferedFileSystem.awaitIO(work); }
+        catch (IllegalStateException failure) {
+            if (failure.getCause() instanceof IOException io) throw io;
+            throw failure;
+        }
+    }
 
     public Mount openManaged(CompoundTag original, long capacity, boolean buffered) throws IOException {
         synchronized (OPEN_LOCK) {

@@ -15,6 +15,35 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class DriveEnvironmentTest {
+    @Test
+    void rawReloadPreservesAValidHeadPosition() throws Exception {
+        OpenComputersApi.initialize();
+        final var drive = new DriveEnvironment(512 * 6, 1, null, null, null, 0, null);
+        drive.writeByte(null, new TestArguments(2561, 17));
+        final var snapshot = new net.minecraft.nbt.CompoundTag(); drive.save(snapshot);
+        final var restored = new DriveEnvironment(512 * 6, 1, null, null, null, 0, null);
+        restored.load(snapshot);
+        final var after = new net.minecraft.nbt.CompoundTag(); restored.save(after);
+        assertEquals(5, after.getInt("headPos"));
+    }
+
+    @Test
+    void loadingShorterBytesClearsThePreviousTail() throws Exception {
+        OpenComputersApi.initialize();
+        final var drive = new DriveEnvironment(512, 1, null, null, null, 0, null);
+        drive.writeSector(null, new TestArguments(1, new byte[]{17, 42}));
+        final var shorter = new net.minecraft.nbt.CompoundTag(); shorter.putByteArray("data", new byte[]{99}); drive.load(shorter);
+        assertEquals(0, drive.readByte(null, new TestArguments(2))[0]);
+    }
+    @Test
+    void standaloneRawSnapshotsDoNotAliasLaterWrites() throws Exception {
+        OpenComputersApi.initialize();
+        final var drive = new DriveEnvironment(512, 1, null, null, null, 0, null);
+        drive.writeSector(null, new TestArguments(1, new byte[]{17, (byte) 255}));
+        final var snapshot = new net.minecraft.nbt.CompoundTag(); drive.save(snapshot);
+        drive.writeByte(null, new TestArguments(1, 42));
+        assertEquals(17, snapshot.getByteArray("data")[0]);
+    }
     @AfterEach
     void resetApi() {
         li.cil.oc.api.API.network = null;

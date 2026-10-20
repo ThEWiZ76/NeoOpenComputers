@@ -33,14 +33,20 @@ record DiskItemEnvironment(ManagedEnvironment delegate, Consumer<CompoundTag> sa
     static ManagedEnvironment create(long capacity, int platters, int speed, String sound,
                                      CompoundTag data, Consumer<CompoundTag> saveData, EnvironmentHost host, String fallbackLabel,
                                      NativeVolumeStore storage) {
+        if (storage == null) return null;
         final String lockInfo = HardDiskDriveItem.lockInfo(data);
         final ManagedEnvironment environment;
         final var source = data == null ? new CompoundTag() : data.copy();
         String storageRoot = null;
         if (HardDiskDriveItem.isUnmanaged(data)) {
-            environment = new DriveEnvironment((int) capacity, platters, new ItemDiskLabel(fallbackLabel), host, sound, speed, lockInfo);
+            if (capacity > Integer.MAX_VALUE) throw new IllegalArgumentException("Raw drive exceeds supported byte-array capacity");
+            final NativeVolumeStore.RawMount mount;
+            try { mount = storage.openRaw(source, (int) capacity); }
+            catch (IOException failure) { throw new UncheckedIOException("Cannot mount native raw drive", failure); }
+            final var node = source.getCompound("node"); node.putString("address", mount.nodeAddress()); source.put("node", node);
+            source.putString(NativeVolumeStore.RAW_STORAGE_TAG, mount.storageRoot());
+            environment = new DriveEnvironment((int) capacity, platters, new ItemDiskLabel(fallbackLabel), host, sound, speed, lockInfo, mount);
         } else {
-            if (storage == null) return null;
             final NativeVolumeStore.Mount mount;
             try { mount = storage.openManaged(source, capacity, ModSettings.bufferChanges()); }
             catch (IOException failure) { throw new UncheckedIOException("Cannot mount native managed disk", failure); }
