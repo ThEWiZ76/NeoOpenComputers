@@ -21,6 +21,7 @@ import li.cil.oc.api.prefab.AbstractValue;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.lang.ref.WeakReference;
@@ -34,12 +35,14 @@ public final class CraftingStatusValue extends AbstractValue {
     private static final Map<UUID, WeakReference<Request>> REQUESTS = new HashMap<>();
     private static final Map<UUID, Request> ACTIVE = new HashMap<>();
     private static boolean registered;
+    private static volatile CraftingJournal journal;
     private Request request;
 
     public CraftingStatusValue() { }
     CraftingStatusValue(final CraftingTarget target, final int amount, final boolean prioritizePower, final String cpuName) {
         request = new Request(target, amount, prioritizePower, cpuName);
         synchronized (REQUESTS) { REQUESTS.put(request.id, new WeakReference<>(request)); ACTIVE.put(request.id, request); }
+        record(request);
     }
 
     public static void register() {
@@ -47,9 +50,54 @@ public final class CraftingStatusValue extends AbstractValue {
         registered = true;
         NeoForge.EVENT_BUS.addListener(CraftingStatusValue::tick);
         NeoForge.EVENT_BUS.addListener(CraftingStatusValue::stopped);
+        NeoForge.EVENT_BUS.addListener((ServerStartedEvent event) -> restoreWorld(event.getServer()));
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, CraftingStatusValue::bindRestoredRequests);
+    }
+
+    private static void bindRestoredRequests(final net.neoforged.neoforge.event.tick.LevelTickEvent.Post event) {
+        if (!(event.getLevel() instanceof net.minecraft.server.level.ServerLevel level)) return;
+        final java.util.List<Request> requests;
+        synchronized (REQUESTS) { requests = java.util.List.copyOf(ACTIVE.values()); }
+        for (final var request : requests) {
+            if (request.link != null && request.node == null && request.target.loadedIn(level)) {
+                // AE2 initializes its nodes at level-end. Bind before the next world tick can deliver CPU output;
+                // a startup retry backoff must not leave a restored CPU running without its requester.
+                request.retryTicks = 0;
+                request.tick();
+                record(request);
+            }
+        }
+    }
+
+    private static void restoreWorld(final net.minecraft.server.MinecraftServer server) {
+        if (journal != null) return;
+        final var restored = server.overworld().getDataStorage().computeIfAbsent(CraftingJournal.FACTORY, CraftingJournal.FILE);
+        synchronized (REQUESTS) {
+            for (final var reference : REQUESTS.values()) {
+                final var request = reference.get();
+                if (request == null) continue;
+                final var saved = restored.lookup(request.id);
+                if (saved != null) request.restoreProgress(saved);
+            }
+            for (final var saved : restored.active()) {
+                final UUID id = saved.getUUID("id");
+                final var reference = REQUESTS.get(id);
+                var request = reference == null ? null : reference.get();
+                if (request == null) { request = new Request(saved); REQUESTS.put(id, new WeakReference<>(request)); }
+                ACTIVE.put(id, request);
+            }
+            ACTIVE.values().removeIf(request -> request.done || request.canceled || request.failed != null);
+            journal = restored;
+        }
+    }
+
+    private static void record(final Request request) {
+        final var current = journal;
+        if (current != null) { final var data = new CompoundTag(); request.save(data); current.record(data); }
     }
 
     private static void tick(final ServerTickEvent.Post event) {
+        restoreWorld(event.getServer());
         final java.util.List<Request> requests;
         synchronized (REQUESTS) {
             REQUESTS.values().removeIf(reference -> reference.get() == null);
@@ -57,6 +105,7 @@ public final class CraftingStatusValue extends AbstractValue {
         }
         for (final var request : requests) {
             request.tick();
+            record(request);
             if (request.done || request.canceled || request.failed != null) {
                 synchronized (REQUESTS) { ACTIVE.remove(request.id); }
             }
@@ -71,6 +120,7 @@ public final class CraftingStatusValue extends AbstractValue {
             }
             REQUESTS.clear();
             ACTIVE.clear();
+            journal = null;
         }
     }
 
@@ -85,6 +135,7 @@ public final class CraftingStatusValue extends AbstractValue {
         if (request.done) return new Object[]{false, "job already completed"};
         if (request.link != null) request.link.cancel();
         request.canceled = true;
+        record(request);
         return new Object[]{true};
     }
 
@@ -94,8 +145,12 @@ public final class CraftingStatusValue extends AbstractValue {
         synchronized (REQUESTS) {
             final var existing = REQUESTS.get(id);
             request = existing == null ? null : existing.get();
+            li.cil.oc.NeoOpenComputers.LOGGER.debug("Restoring AE2 status {} using {} request", id, request == null ? "saved" : "live");
             if (request == null) {
                 request = new Request(tag);
+                final var current = journal;
+                final var saved = current == null ? null : current.lookup(id);
+                if (saved != null) request.restoreProgress(saved);
                 REQUESTS.put(id, new WeakReference<>(request));
                 if (!request.done && !request.canceled && request.failed == null) ACTIVE.put(id, request);
             }
@@ -133,10 +188,15 @@ public final class CraftingStatusValue extends AbstractValue {
             amount = tag.getInt("amount");
             prioritizePower = tag.getBoolean("prioritizePower");
             cpuName = tag.getString("cpuName");
+            restoreProgress(tag);
+        }
+
+        void restoreProgress(final CompoundTag tag) {
             done = tag.getBoolean("done"); canceled = tag.getBoolean("canceled");
-            if (tag.contains("failed")) failed = tag.getString("failed");
+            failed = tag.contains("failed") ? tag.getString("failed") : null;
             nodeData = tag.getCompound("node").copy();
-            if (tag.contains("link")) link = StorageHelper.loadCraftingLink(tag.getCompound("link"), this);
+            link = tag.contains("link") && !CraftingJournal.terminal(tag) ? StorageHelper.loadCraftingLink(tag.getCompound("link"), this) : null;
+            li.cil.oc.NeoOpenComputers.LOGGER.debug("Restored AE2 request {} link {} done={} canceled={}", id, link == null ? null : link.getCraftingID(), done, canceled);
         }
 
         boolean computing() { return link == null && !done && !canceled && failed == null; }
@@ -167,6 +227,8 @@ public final class CraftingStatusValue extends AbstractValue {
                     node.setOwningPlayerId(controller.getOwningPlayerId());
                     node.create(target.world(), target.position());
                     GridHelper.createConnection(node.getNode(), controller);
+                    li.cil.oc.NeoOpenComputers.LOGGER.debug("Bound AE2 request {} link {} to controller grid: {}", id,
+                        link == null ? null : link.getCraftingID(), node.getGrid() == controller.getGrid());
                 }
                 retryDelay = 1;
                 if (link != null) return;
@@ -227,6 +289,11 @@ public final class CraftingStatusValue extends AbstractValue {
             // Leave output with AE2's storage insertion path, as the original OC requester did.
             return 0;
         }
-        @Override public void jobStateChange(final ICraftingLink changed) { captureTerminal(); }
+        @Override public void jobStateChange(final ICraftingLink changed) {
+            captureTerminal();
+            li.cil.oc.NeoOpenComputers.LOGGER.debug("AE2 request {} link {} changed done={} canceled={} sameLink={}", id,
+                changed.getCraftingID(), changed.isDone(), changed.isCanceled(), changed == link);
+            record(this);
+        }
     }
 }

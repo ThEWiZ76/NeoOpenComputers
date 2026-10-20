@@ -63,4 +63,7 @@ final class CraftingTarget {
 
     net.minecraft.world.level.Level world() { node(); return tile.getLevel(); }
     BlockPos position() { return BlockPos.of(data.getLong("position")); }
+    boolean loadedIn(final net.minecraft.server.level.ServerLevel world) {
+        return world.dimension().location().toString().equals(data.getString("dimension")) && world.hasChunkAt(position());
+    }
 }
