@@ -52,6 +52,12 @@ public final class ProjectRedWrenchGameTests {
             adapter.getBlockState().useItemOn(screwdriver, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit);
             helper.assertTrue(!adapter.isSideOpen(Direction.WEST) && screwdriver.getDamageValue() == 2,
                 "Sneaking ProjectRed screwdriver did not close the opposite side and consume exactly one durability");
+            final var chargerPos = pos.east(2);
+            helper.getLevel().setBlockAndUpdate(chargerPos, ModBlocks.CHARGER.get().defaultBlockState());
+            final var charger = (li.cil.oc.common.blockentity.ChargerBlockEntity) helper.getLevel().getBlockEntity(chargerPos);
+            charger.getBlockState().useItemOn(screwdriver, helper.getLevel(), player, InteractionHand.MAIN_HAND,
+                new BlockHitResult(Vec3.atCenterOf(chargerPos), Direction.EAST, chargerPos, false));
+            helper.assertTrue(charger.invertSignal() && screwdriver.getDamageValue() == 3, "Charger did not notify the actual screwdriver usage exactly once");
         } finally { unbreakable.set(previous); }
         helper.succeed();
     }

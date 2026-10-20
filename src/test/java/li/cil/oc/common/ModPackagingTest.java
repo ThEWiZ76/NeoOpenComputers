@@ -169,6 +169,25 @@ final class ModPackagingTest {
     }
 
     @Test
+    void optionalIntegrationsAreNotBundledOrPublishedAsRequiredDependencies() throws Exception {
+        try (ZipFile jar = new ZipFile(System.getProperty("neoopencomputers.modJar"))) {
+            for (final String prefix : new String[]{"mekanism/", "appeng/", "mrtjp/", "codechicken/", "dan200/computercraft/"}) {
+                assertTrue(!containsEntryStartingWith(jar, prefix), () -> "Optional integration classes were bundled: " + prefix);
+            }
+        }
+        final var factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        final var document = factory.newDocumentBuilder().parse(Path.of(System.getProperty("neoopencomputers.mavenPom")).toFile());
+        final var dependencies = document.getElementsByTagName("dependency");
+        final var optionalGroups = java.util.Set.of("mekanism", "org.appliedenergistics", "mrtjp", "io.codechicken", "cc.tweaked");
+        for (int index = 0; index < dependencies.getLength(); index++) {
+            final var dependency = (org.w3c.dom.Element) dependencies.item(index);
+            final String group = dependency.getElementsByTagName("groupId").item(0).getTextContent().trim();
+            assertTrue(!optionalGroups.contains(group), () -> "Published POM requires optional integration group " + group);
+        }
+    }
+
+    @Test
     void localMavenRepositoryUsesPortableGradleUri() throws IOException {
         final String build = Files.readString(BUILD_GRADLE);
 

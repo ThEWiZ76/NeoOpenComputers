@@ -32,11 +32,8 @@ public class WrenchItem extends Item implements li.cil.oc.api.internal.Wrench {
 
     @Override
     public boolean useWrenchOnBlock(final Player player, final Level world, final BlockPos pos, final boolean simulate) {
-        if (!rotateBlock(world, pos, simulate)) {
-            return false;
-        }
         if (player != null && !simulate) {
-            player.swing(player.getUsedItemHand());
+            player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
         }
         return true;
     }

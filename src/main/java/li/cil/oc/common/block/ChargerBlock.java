@@ -96,11 +96,12 @@ public class ChargerBlock extends HorizontalDirectionalBlock implements EntityBl
         final Player player,
         final InteractionHand hand,
         final BlockHitResult hitResult) {
-        if (!WrenchTools.isWrench(stack) || !(level.getBlockEntity(pos) instanceof ChargerBlockEntity charger)) {
+        if (!WrenchTools.isWrench(stack) || !WrenchTools.holdsApplicableWrench(player, pos) || !(level.getBlockEntity(pos) instanceof ChargerBlockEntity charger)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
         if (!level.isClientSide) {
             charger.toggleInvertSignal();
+            WrenchTools.wrenchUsed(player, pos);
             if (player != null) {
                 player.swing(hand);
             }

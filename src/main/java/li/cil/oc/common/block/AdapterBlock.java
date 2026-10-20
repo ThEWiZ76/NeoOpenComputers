@@ -72,7 +72,7 @@ public class AdapterBlock extends Block implements EntityBlock {
         final Player player,
         final InteractionHand hand,
         final BlockHitResult hitResult) {
-        if (!WrenchTools.isWrench(stack) || !(level.getBlockEntity(pos) instanceof AdapterBlockEntity adapter)) {
+        if (!WrenchTools.isWrench(stack) || !WrenchTools.holdsApplicableWrench(player, pos) || !(level.getBlockEntity(pos) instanceof AdapterBlockEntity adapter)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
         if (!level.isClientSide) {

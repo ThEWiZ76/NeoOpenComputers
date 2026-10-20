@@ -20,6 +20,10 @@ sourceSets.main.resources {
 repositories {
     mavenCentral()
     maven {
+        url = 'https://modmaven.dev/'
+        content { includeGroup 'mekanism' }
+    }
+    maven {
         url = 'https://maven.covers1624.net/'
         content { includeGroup 'mrtjp'; includeGroup 'io.codechicken' }
     }
@@ -116,6 +120,17 @@ runs {
         argument '--nogui'
     }
     gameTestServer {
+        if (project.hasProperty('neoopencomputers.gameTestWorld')) {
+            def world = project.property('neoopencomputers.gameTestWorld').toString()
+            if (project.hasProperty('neoopencomputers.restartPhase') || !(world ==~ /oc-tests-[a-zA-Z0-9_-]+/)) {
+                throw new GradleException('Ordinary isolated GameTests require an oc-tests-* world and no restart phase.')
+            }
+            argument '--world'
+            argument world
+        }
+        if (project.hasProperty('withMekanism')) {
+            systemProperty 'neoopencomputers.testMekanism', 'true'
+        }
         if (project.hasProperty('withAE2')) {
             systemProperty 'neoopencomputers.testAE2', 'true'
         }
@@ -207,6 +222,8 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
     dependsOn tasks.named('generateAe2ExportGameTestStructure')
 }
 configurations {
+    mekanismRuntime
+    runtimeClasspath.extendsFrom mekanismRuntime
     appliedEnergisticsRuntime
     runtimeClasspath.extendsFrom appliedEnergisticsRuntime
     nativeLuaArtifacts
@@ -219,6 +236,11 @@ configurations {
 }
 
 dependencies {
+    // Pinned implementation also supplies public configurator/capability helpers used by real-mod tests.
+    compileOnly 'mekanism:Mekanism:1.21.1-10.7.19.85'
+    if (project.hasProperty('withMekanism')) {
+        mekanismRuntime 'mekanism:Mekanism:1.21.1-10.7.19.85'
+    }
     // AE2's ghost-config host is exposed by the pinned implementation, not its API classifier.
     compileOnly 'org.appliedenergistics:appliedenergistics2:19.2.18'
     if (project.hasProperty('withAE2')) {
