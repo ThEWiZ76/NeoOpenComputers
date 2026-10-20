@@ -167,6 +167,7 @@ public final class CraftingStatusValue extends AbstractValue {
         volatile IGridNode controller;
         ICraftingLink link;
         Future<ICraftingPlan> future;
+        ICraftingCPU selectedCpu;
         CompoundTag nodeData = new CompoundTag();
         String failed;
         boolean done;
@@ -180,6 +181,7 @@ public final class CraftingStatusValue extends AbstractValue {
             this.amount = amount;
             this.prioritizePower = prioritizePower;
             this.cpuName = cpuName;
+            selectCpu(target.node());
         }
 
         Request(final CompoundTag tag) {
@@ -234,6 +236,7 @@ public final class CraftingStatusValue extends AbstractValue {
                 if (link != null) return;
                 final var crafting = controller.getGrid().getCraftingService();
                 if (future == null) {
+                    if (selectedCpu == null && !selectCpu(controller)) return;
                     future = crafting.beginCraftingCalculation(target.world(), this, target.item(), amount, CalculationStrategy.REPORT_MISSING_ITEMS);
                     return;
                 }
@@ -242,12 +245,7 @@ public final class CraftingStatusValue extends AbstractValue {
                 final var completed = future;
                 future = null;
                 final var plan = completed.get();
-                ICraftingCPU cpu = null;
-                if (!cpuName.isEmpty()) {
-                    cpu = crafting.getCpus().stream().filter(candidate -> candidate.getName() != null && cpuName.equals(candidate.getName().getString())).findFirst().orElse(null);
-                    if (cpu == null) { fail("no cpu named " + cpuName); return; }
-                }
-                final var result = crafting.submitJob(plan, this, cpu, prioritizePower, getActionSource());
+                final var result = crafting.submitJob(plan, this, selectedCpu, prioritizePower, getActionSource());
                 if (result.successful() && result.link() != null) link = result.link();
                 else fail(result.errorCode() == null ? "no link" : result.errorCode().name().toLowerCase(java.util.Locale.ROOT));
             } catch (IllegalStateException exception) {
@@ -257,6 +255,16 @@ public final class CraftingStatusValue extends AbstractValue {
                     retryDelay = Math.min(100, retryDelay * 2);
                 } else fail(exception.getMessage());
             } catch (Exception exception) { fail(exception.toString()); }
+        }
+
+        boolean selectCpu(final IGridNode node) {
+            if (cpuName.isEmpty()) return true;
+            // Match upstream selection before asynchronous calculation. A removed CPU must not be replaced
+            // by a different same-name/automatic CPU when the result is finally submitted.
+            selectedCpu = node.getGrid().getCraftingService().getCpus().stream()
+                .filter(candidate -> candidate.getName() != null && cpuName.equals(candidate.getName().getString())).findFirst().orElse(null);
+            if (selectedCpu == null) { fail("no cpu named " + cpuName); return false; }
+            return true;
         }
 
         void fail(final String reason) {
@@ -269,6 +277,7 @@ public final class CraftingStatusValue extends AbstractValue {
             if (future != null) { future.cancel(true); future = null; }
             if (node != null) { node.saveToNBT(nodeData); node.destroy(); node = null; }
             controller = null;
+            selectedCpu = null;
         }
 
         void save(final CompoundTag tag) {
