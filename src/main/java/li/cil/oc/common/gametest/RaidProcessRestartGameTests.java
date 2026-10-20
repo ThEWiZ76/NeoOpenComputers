@@ -64,6 +64,8 @@ public final class RaidProcessRestartGameTests {
         final var record = (Container) level.getBlockEntity(RECORD);
         if (prepare) {
             for (int slot = 0; slot < 3; slot++) raid.setItem(slot, new ItemStack(ModItems.HDD_TIER1.get()));
+            for (int turn = 0; turn < 3; turn++) helper.assertTrue(li.cil.oc.common.item.WrenchItem.rotateBlock(level, RAID, false), "RAID restart fixture could not rotate the actual host");
+            helper.assertTrue(raid.getBlockState().getValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING) == Direction.WEST, "RAID restart fixture has wrong front");
             try { filesystem(helper, raid).invoke("setLabel", computer.machine(), "restart-raid"); }
             catch (Exception exception) { helper.fail(exception.toString()); }
             final var cpu = new ItemStack(ModItems.CPU_TIER1.get());
@@ -95,12 +97,15 @@ public final class RaidProcessRestartGameTests {
             helper.assertTrue(data.getString("phase").equals("prepared") && data.getLong("pid") > 0 && data.getLong("pid") != ProcessHandle.current().pid(), "RAID checkpoint was not prepared in another JVM");
             helper.assertTrue(data.getString("raid").equals(raid.node().address()) && data.getString("filesystem").equals(filesystem(helper, raid).address())
                 && data.getString("computer").equals(computer.machine().node().address()), "RAID process restart changed saved identities");
+            helper.assertTrue(data.getString("facing").equals("west") && raid.getBlockState().getValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING) == Direction.WEST,
+                "RAID blockstate front was not retained across process restart");
             helper.assertTrue(computer.machine().isRunning() && computer.machine().signal("resume_raid"), "RAID computer did not retain running state");
         }
         helper.startSequence().thenWaitUntil(() -> helper.assertTrue(marker(computer).equals(prepare ? "raid-waiting" : "raid-resumed"), "Native RAID continuation failed: " + computer.machine().lastError()))
             .thenExecute(() -> {
                 final var data = new CompoundTag(); data.putString("phase", prepare ? "prepared" : "verified"); data.putLong("pid", ProcessHandle.current().pid());
                 data.putString("raid", raid.node().address()); data.putString("filesystem", filesystem(helper, raid).address()); data.putString("computer", computer.machine().node().address());
+                data.putString("facing", raid.getBlockState().getValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING).getSerializedName());
                 final var paper = new ItemStack(Items.PAPER); paper.set(DataComponents.CUSTOM_DATA, CustomData.of(data)); record.setItem(0, paper); record.setChanged();
                 li.cil.oc.NeoOpenComputers.LOGGER.info("Native RAID {} in PID {}", prepare ? "prepared" : "verified", ProcessHandle.current().pid());
             }).thenSucceed();

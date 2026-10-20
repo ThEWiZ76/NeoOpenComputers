@@ -21,22 +21,22 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RaidStorageGameTests {
     private static final byte[] BYTES = new byte[]{0, (byte) 128, (byte) 255, 42};
-    private record Hardware(RaidBlockEntity raid, ComputerCaseBlockEntity computer) { }
-    private static Hardware hardware(GameTestHelper helper) {
+    record Hardware(RaidBlockEntity raid, ComputerCaseBlockEntity computer) { }
+    static Hardware hardware(GameTestHelper helper) {
         final var pos = helper.absolutePos(new BlockPos(3, 2, 3));
         helper.getLevel().setBlockAndUpdate(pos.west(), ModBlocks.COMPUTER_CASE_TIER1.get().defaultBlockState());
         helper.getLevel().setBlockAndUpdate(pos, ModBlocks.RAID.get().defaultBlockState());
         final var computer = (ComputerCaseBlockEntity) helper.getLevel().getBlockEntity(pos.west()); computer.onLoad();
         return new Hardware((RaidBlockEntity) helper.getLevel().getBlockEntity(pos), computer);
     }
-    private static Component filesystem(GameTestHelper helper, RaidBlockEntity raid) {
+    static Component filesystem(GameTestHelper helper, RaidBlockEntity raid) {
         final var nodes = raid.onAnalyze(null, Direction.NORTH, 0, 0, 0);
         helper.assertTrue(nodes.length == 1 && nodes[0] instanceof Component, "Complete RAID has no filesystem"); return (Component) nodes[0];
     }
-    private static void fill(Hardware hardware) {
+    static void fill(Hardware hardware) {
         for (int slot = 0; slot < 3; slot++) hardware.raid.setItem(slot, new ItemStack(ModItems.HDD_TIER1.get()));
     }
-    private static Object write(GameTestHelper helper, Hardware hardware) throws Exception {
+    static Object write(GameTestHelper helper, Hardware hardware) throws Exception {
         final var fs = filesystem(helper, hardware.raid); ((Connector) hardware.computer.node()).changeBuffer(10000);
         final var context = hardware.computer.machine(); var h = fs.invoke("open", context, "array.bin", "wb")[0];
         fs.invoke("write", context, h, BYTES); fs.invoke("close", context, h);

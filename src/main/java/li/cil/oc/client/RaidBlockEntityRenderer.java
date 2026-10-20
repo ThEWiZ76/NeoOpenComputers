@@ -2,8 +2,10 @@ package li.cil.oc.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
 import li.cil.oc.NeoOpenComputers;
 import li.cil.oc.common.blockentity.RaidBlockEntity;
+import li.cil.oc.common.block.RaidBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -13,6 +15,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Direction;
 
 public final class RaidBlockEntityRenderer implements BlockEntityRenderer<RaidBlockEntity> {
     private static final float FRONT_Z = 1.00125F;
@@ -34,6 +37,8 @@ public final class RaidBlockEntityRenderer implements BlockEntityRenderer<RaidBl
         final MultiBufferSource bufferSource,
         final int packedLight,
         final int packedOverlay) {
+        poseStack.pushPose();
+        orientToFront(raid.getBlockState().getValue(RaidBlock.FACING), poseStack);
         final int presenceMask = raid.visualPresenceMask();
         final PoseStack.Pose pose = poseStack.last();
         final VertexConsumer errorConsumer = consumer(bufferSource, ERROR_TEXTURE);
@@ -47,6 +52,18 @@ public final class RaidBlockEntityRenderer implements BlockEntityRenderer<RaidBl
         if (activeSlot >= 0 && activeSlot < RaidBlockEntity.CONTAINER_SIZE) {
             renderSlotOverlay(consumer(bufferSource, ACTIVITY_TEXTURE), pose, activeSlot, packedLight, packedOverlay);
         }
+        poseStack.popPose();
+    }
+
+    static void orientToFront(final Direction facing, final PoseStack poseStack) {
+        poseStack.translate(0.5D, 0.5D, 0.5D);
+        switch (facing) {
+            case WEST -> poseStack.mulPose(Axis.YP.rotationDegrees(-90F));
+            case NORTH -> poseStack.mulPose(Axis.YP.rotationDegrees(180F));
+            case EAST -> poseStack.mulPose(Axis.YP.rotationDegrees(90F));
+            default -> { }
+        }
+        poseStack.translate(-0.5D, -0.5D, -0.5D);
     }
 
     private static VertexConsumer consumer(final MultiBufferSource bufferSource, final ResourceLocation texture) {
@@ -63,9 +80,9 @@ public final class RaidBlockEntityRenderer implements BlockEntityRenderer<RaidBl
         final float left = U1 + slot * SLOT_SIZE;
         final float right = U1 + (slot + 1) * SLOT_SIZE;
         vertex(consumer, pose, left, 1F, FRONT_Z, left, 0F, packedLight, packedOverlay);
-        vertex(consumer, pose, right, 1F, FRONT_Z, right, 0F, packedLight, packedOverlay);
-        vertex(consumer, pose, right, 0F, FRONT_Z, right, 1F, packedLight, packedOverlay);
         vertex(consumer, pose, left, 0F, FRONT_Z, left, 1F, packedLight, packedOverlay);
+        vertex(consumer, pose, right, 0F, FRONT_Z, right, 1F, packedLight, packedOverlay);
+        vertex(consumer, pose, right, 1F, FRONT_Z, right, 0F, packedLight, packedOverlay);
     }
 
     private static void vertex(
