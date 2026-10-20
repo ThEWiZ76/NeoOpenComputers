@@ -80,6 +80,29 @@ public final class LootDiskCyclingGameTests {
         });
     }
 
+    @GameTest(template = "empty") public static void recraftingUsesTheFactoryMountedByTheDiskDriver(GameTestHelper helper) {
+        isolated(helper, registry -> {
+            final var firstCalls = new java.util.concurrent.atomic.AtomicInteger();
+            final var secondCalls = new java.util.concurrent.atomic.AtomicInteger();
+            final var first = registry.registerFloppy("precedence-first", DyeColor.BLUE, () -> {
+                firstCalls.incrementAndGet(); return li.cil.oc.api.FileSystem.asReadOnly(li.cil.oc.api.FileSystem.fromMemory(64));
+            }, true);
+            final var second = registry.registerFloppy("precedence-second", DyeColor.RED, () -> {
+                secondCalls.incrementAndGet(); return li.cil.oc.api.FileSystem.asReadOnly(li.cil.oc.api.FileSystem.fromMemory(64));
+            }, true);
+            final var disk = second.copy();
+            final var tag = disk.get(DataComponents.CUSTOM_DATA).copyTag();
+            tag.putString("oc:lootFactory", first.get(DataComponents.CUSTOM_DATA).copyTag().getString(ItemRegistry.FLOPPY_FACTORY_ID_TAG));
+            disk.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+            final var environment = li.cil.oc.api.Driver.driverFor(disk).createEnvironment(disk, null);
+            helper.assertTrue(environment != null && firstCalls.get() == 1 && secondCalls.get() == 0, "Disk driver did not select the legacy factory first");
+            try {
+                final var result = cycle(new LootDiskCyclingRecipe(CraftingBookCategory.MISC), disk, helper);
+                helper.assertTrue(ItemStack.isSameItemSameComponents(result, second), "Recrafting advanced from a different factory than the mounted disk");
+            } finally { environment.node().remove(); }
+        });
+    }
+
     private static CraftingInput input(ItemStack disk) {
         return CraftingInput.of(2, 1, List.of(disk, new ItemStack(ModItems.WRENCH.get())));
     }

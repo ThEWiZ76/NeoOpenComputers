@@ -101,6 +101,6 @@ public final class LootDiskCyclingRecipe extends CustomRecipe {
         final CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         if (customData == null) return "";
         final CompoundTag tag = customData.copyTag();
-        return tag.contains(ItemRegistry.FLOPPY_FACTORY_ID_TAG, Tag.TAG_STRING) ? tag.getString(ItemRegistry.FLOPPY_FACTORY_ID_TAG) : tag.getString("oc:lootFactory");
+        return tag.contains("oc:lootFactory", Tag.TAG_STRING) ? tag.getString("oc:lootFactory") : tag.getString(ItemRegistry.FLOPPY_FACTORY_ID_TAG);
     }
 }
