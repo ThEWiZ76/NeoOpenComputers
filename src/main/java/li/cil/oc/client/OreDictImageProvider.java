@@ -15,18 +15,23 @@ public final class OreDictImageProvider implements ImageProvider {
     @Override
     public ImageRenderer getImage(final String data) {
         final ResourceLocation id = parseTagId(data);
-        if (id == null) {
-            return missing();
-        }
-
-        final TagKey<Item> tag = TagKey.create(Registries.ITEM, id);
-        final List<ItemStack> stacks = BuiltInRegistries.ITEM.getTag(tag)
+        final List<ItemStack> stacks = id == null ? List.of() : BuiltInRegistries.ITEM.getTag(TagKey.create(Registries.ITEM, id))
             .stream()
             .flatMap(holders -> holders.stream())
             .map(holder -> new ItemStack(holder.value()))
             .filter(stack -> !stack.isEmpty())
             .toList();
-        return stacks.isEmpty() ? missing() : new ItemStackImageRenderer(stacks);
+        if (!stacks.isEmpty()) {
+            return new ItemStackImageRenderer(stacks);
+        }
+        if (data != null && data.startsWith("oc:")) {
+            final var info = li.cil.oc.api.Items.get(data.substring(3));
+            final ItemStack stack = info == null ? null : info.createItemStack(1);
+            if (stack != null && !stack.isEmpty()) {
+                return new ItemStackImageRenderer(List.of(stack));
+            }
+        }
+        return missing();
     }
 
     private static ResourceLocation parseTagId(final String data) {
