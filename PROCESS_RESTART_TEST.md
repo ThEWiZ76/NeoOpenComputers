@@ -69,3 +69,22 @@ Verified 2026-10-19 with oc-restart-redstone-20261019-04: prepare PID 46908, ver
 Worlds ending 01-03 and their failed-prepare logs are diagnostic artifacts, not valid restart evidence. Their CC source program passed a numeric value to the boolean setOutput call. Chunk-ticking and timing hypotheses did not fix that program; the corrected analogue call produced the accepted pair. No diagnostic world was deleted or reused.
 
 Scope: orderly process termination and actual chunk loading for redstone history/output/threshold/node identity on these four hosts, plus real network event delivery from IO. This does not prove crash recovery, all running-host Lua continuations, cross-version migration, multiplayer or visual client acceptance.
+
+## Native Lua 5.3/5.4 host matrix - implementation plan 2026-10-20
+
+Close the missing true-JVM restart coverage for case, rack, microcontroller, robot and drone on both selectable native versions. Add opt-in `-Pneoopencomputers.restartNativeHosts` alongside the existing isolated prepare/verify phase and oc-restart world. Prepare installs ten separate forced-chunk fixtures and persists a PID/phase/machine record; verify uses natural chunk/entity loading in another process, never manual NBT reconstruction. Assert native VM selection, retained cyclic local table, tmp identity, binary file bytes and aliased open-handle offset. Supply bounded test power from the first server tick. Refuse prepare overwrite and repeated verify. Tablet retains its existing orderly-logout stopped-state contract; this matrix does not alter it.
+
+Validation: compile, run both fresh-world JVM phases to normal exit, archive logs and inspect exact required-test summaries; run the ordinary suite without the option to establish isolation. Diagnose actual failures before changing runtime. Real client, crash recovery and cross-version migration remain separate acceptance. Status: completed for this scoped orderly restart matrix; see the acceptance checkpoint below.
+
+## Native Lua 5.3/5.4 true-JVM host checkpoint - 2026-10-20
+
+Opt-in NativeHostsProcessRestartGameTests covers case, rack, microcontroller, robot and drone on both Lua5.3/5.4. Fresh world oc-restart-native-hosts-20261020-02 passed all870 required tests in prepare PID45936 and verify PID54112, both normal shutdown/build success/terminal exit0. Each saved host retained machine address and running state; the actual resumed native Lua checked its version, cyclic local table, tmp filesystem address and binary open-handle alias/offset/remaining bytes. Verify uses natural chunk/entity loading, without manual NBT reconstruction. Controlled bounded power starts with the first world tick. Persisted PID/phase records reject overwrites and repeated verify. Existing tablet orderly-logout stopped-state policy is unchanged.
+
+The first fresh-world attempt -01 failed only the two new drone fixtures: spawning in a forced chunk does not make the entity immediately accessible through the level UUID lookup. Traced vanilla section visibility and moved prepare startup behind actual host availability. Other eight fixtures prepared; failed world/logs retained. No production runtime change was needed. Green logs: native-hosts-prepare.log and native-hosts-verify.log with archived latest/debug companions. Ordinary native-hosts-default-build.log passes build2239 unit tests (zero failures/errors/skips) and855 required GameTests without the opt-in profile, terminal exit0. This proves orderly Windows/Java21 server restart for these host/version combinations; it does not close crash recovery, cross-version migration, Linux/macOS, every addon, real-client, multiplayer/protection or load acceptance. Beta remains3-6 concentrated workweeks, low confidence; no OS focus/mouse action.
+
+Run the two commands below sequentially with a fresh world name; wait for prepare exit0 before verify:
+
+```powershell
+rtk proxy cmd /d /c gradlew.bat --no-daemon runGameTestServer '-Pneoopencomputers.restartNativeHosts' '-Pneoopencomputers.restartPhase=prepare' '-Pneoopencomputers.restartWorld=oc-restart-native-hosts-example-01'
+rtk proxy cmd /d /c gradlew.bat --no-daemon runGameTestServer '-Pneoopencomputers.restartNativeHosts' '-Pneoopencomputers.restartPhase=verify' '-Pneoopencomputers.restartWorld=oc-restart-native-hosts-example-01'
+```
