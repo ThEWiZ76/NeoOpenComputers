@@ -20,6 +20,10 @@ sourceSets.main.resources {
 repositories {
     mavenCentral()
     maven {
+        url = 'https://maven.blamejared.com/'
+        content { includeGroup 'mezz.jei' }
+    }
+    maven {
         url = 'https://modmaven.dev/'
         content { includeGroup 'mekanism' }
     }
@@ -228,6 +232,8 @@ tasks.matching { it.name == 'runGameTestServer' }.configureEach {
     dependsOn tasks.named('generateAe2ExportGameTestStructure')
 }
 configurations {
+    jeiRuntime
+    runtimeClasspath.extendsFrom jeiRuntime
     mekanismRuntime
     runtimeClasspath.extendsFrom mekanismRuntime
     appliedEnergisticsRuntime
@@ -242,6 +248,11 @@ configurations {
 }
 
 dependencies {
+    compileOnly 'mezz.jei:jei-1.21.1-neoforge-api:19.21.0.246'
+    testImplementation 'mezz.jei:jei-1.21.1-neoforge-api:19.21.0.246'
+    if (project.hasProperty('withJEI')) {
+        jeiRuntime 'mezz.jei:jei-1.21.1-neoforge:19.21.0.246'
+    }
     // Pinned implementation also supplies public configurator/capability helpers used by real-mod tests.
     compileOnly 'mekanism:Mekanism:1.21.1-10.7.19.85'
     if (project.hasProperty('withMekanism')) {
