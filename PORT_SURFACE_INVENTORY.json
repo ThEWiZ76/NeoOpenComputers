@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "c27ef60642e42ff32e430d9c3a9973bcfcfec5da",
+  "port_revision": "9b53261c36574ddfe75115222062f3d01e6ea4ea",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -724,6 +724,10 @@
               "line": 238
             },
             {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 830
+            },
+            {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 248
             }
@@ -882,7 +886,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 771
+              "line": 773
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java",
@@ -1062,6 +1066,10 @@
               "line": 238
             },
             {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 830
+            },
+            {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 248
             }
@@ -1074,6 +1082,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
               "line": 243
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 835
             },
             {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
@@ -1092,6 +1104,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
               "line": 246
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 840
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
@@ -1538,6 +1554,10 @@
               "line": 238
             },
             {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 830
+            },
+            {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 248
             }
@@ -1550,6 +1570,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
               "line": 243
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 835
             },
             {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
@@ -1570,6 +1594,10 @@
               "line": 246
             },
             {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 840
+            },
+            {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 258
             }
@@ -1578,12 +1606,22 @@
         {
           "name": "setName",
           "line": 126,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 850
+            }
+          ]
         },
         {
           "name": "getName",
           "line": 136,
-          "same_name_port_declarations": []
+          "same_name_port_declarations": [
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 845
+            }
+          ]
         }
       ]
     },
@@ -1820,7 +1858,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 823
+              "line": 825
             }
           ]
         },
@@ -1830,7 +1868,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 1051
+              "line": 1086
             }
           ]
         },
@@ -1840,7 +1878,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 1399
+              "line": 1434
             }
           ]
         },
@@ -1850,7 +1888,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 1012
+              "line": 1047
             }
           ]
         }
@@ -3002,7 +3040,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 842
+              "line": 877
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -3016,7 +3054,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 847
+              "line": 882
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -3030,7 +3068,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 939
+              "line": 974
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -3946,7 +3984,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 771
+              "line": 773
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java",
@@ -4551,7 +4589,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 842
+              "line": 877
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4565,7 +4603,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 847
+              "line": 882
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4579,7 +4617,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 828
+              "line": 859
             }
           ]
         },
@@ -4589,7 +4627,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 939
+              "line": 974
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4603,7 +4641,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 969
+              "line": 1004
             }
           ]
         }
@@ -4777,7 +4815,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 909
+              "line": 944
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4791,7 +4829,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 914
+              "line": 949
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4809,7 +4847,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 919
+              "line": 954
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GeneratorUpgradeEnvironment.java",
@@ -4827,7 +4865,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 924
+              "line": 959
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4841,7 +4879,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 929
+              "line": 964
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4855,7 +4893,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 934
+              "line": 969
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4909,7 +4947,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 997
+              "line": 1032
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4923,7 +4961,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 1002
+              "line": 1037
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -4937,7 +4975,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 1007
+              "line": 1042
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/TractorBeamUpgradeEnvironment.java",
@@ -5038,7 +5076,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 736
+              "line": 738
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -5052,7 +5090,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 741
+              "line": 743
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -5066,7 +5104,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 746
+              "line": 748
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -5080,7 +5118,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 751
+              "line": 753
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -5094,7 +5132,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 756
+              "line": 758
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -5108,7 +5146,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 776
+              "line": 778
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -5168,7 +5206,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 766
+              "line": 768
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/TankControllerEnvironment.java",
@@ -5190,7 +5228,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 771
+              "line": 773
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java",
@@ -5218,7 +5256,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 761
+              "line": 763
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -5232,7 +5270,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 766
+              "line": 768
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/TankControllerEnvironment.java",
@@ -5254,7 +5292,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 771
+              "line": 773
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GraphicsCardEnvironment.java",
@@ -5321,7 +5359,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 992
+              "line": 1027
             },
             {
               "path": "src/main/java/li/cil/oc/common/entity/DroneEntity.java",
@@ -5841,7 +5879,7 @@
             },
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 919
+              "line": 954
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/GeneratorUpgradeEnvironment.java",
@@ -6084,7 +6122,7 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
-              "line": 1007
+              "line": 1042
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/TractorBeamUpgradeEnvironment.java",
@@ -6275,6 +6313,10 @@
               "line": 238
             },
             {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 830
+            },
+            {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
               "line": 248
             }
@@ -6287,6 +6329,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
               "line": 243
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 835
             },
             {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
@@ -6305,6 +6351,10 @@
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/MicrocontrollerBlockEntity.java",
               "line": 246
+            },
+            {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 840
             },
             {
               "path": "src/main/java/li/cil/oc/common/SimpleMachine.java",
@@ -7634,6 +7684,10 @@
               "line": 243
             },
             {
+              "path": "src/main/java/li/cil/oc/common/blockentity/RobotBlockEntity.java",
+              "line": 835
+            },
+            {
               "path": "src/main/java/li/cil/oc/common/driver/JukeboxBlockDriver.java",
               "line": 87
             },
@@ -8892,9 +8946,6 @@
     "getMaxStoredPower": [
       "src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:208"
     ],
-    "getName": [
-      "src/main/scala/li/cil/oc/common/tileentity/RobotProxy.scala:136"
-    ],
     "getOwner": [
       "src/main/scala/li/cil/oc/integration/enderstorage/DriverFrequencyOwner.java:87",
       "src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:31"
@@ -8990,9 +9041,6 @@
     "setInterfaceConfiguration": [
       "src/main/scala/li/cil/oc/integration/appeng/DriverBlockInterface.scala:46",
       "src/main/scala/li/cil/oc/integration/appeng/DriverPartInterface.scala:55"
-    ],
-    "setName": [
-      "src/main/scala/li/cil/oc/common/tileentity/RobotProxy.scala:126"
     ],
     "setReading": [
       "src/main/scala/li/cil/oc/integration/tis3d/SerialInterfaceProviderAdapter.scala:63"

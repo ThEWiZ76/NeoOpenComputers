@@ -1,5 +1,8 @@
 # Process restart regression
 
+Robot/shared-machine checkpoint 9b53261c36574ddfe75115222062f3d01e6ea4ea: build/2135 units and both727-test processes pass in fresh world oc-restart-robot-control-20261020-02, prepare PID59064 and verify PID59708, with ProjectRed+CC and normal shutdown. This rechecks the existing four restart probes after shared repeated-start scheduling changed. Two ordinary robot control/name tests run in each process; this is not a new robot-name-specific disk/JVM probe. Logs: robot-control-restart-prepare.log and robot-control-restart-verify.log. See [[Robot control callbacks]] for exact proof and open naming/client scope.
+
+
 Chunkloader policy checkpoint c27ef60642e42ff32e430d9c3a9973bcfcfec5da: the restart batch adds a fourth probe. Prepare persists nine actual Nether controller tickets; verify blocks Nether before worlds load and checks their removal without creating/updating a loader. The missing startup validation reproduced one failure in PID44064 after prepare PID21768; the corrected fresh pair in oc-restart-chunkloader-policy-20261020-01 passes all725 in prepare PID59012 and verify PID43124. Build/2132 units pass; ProjectRed+CC included, both shutdowns normal. The cached blacklist override exists only in the opt-in test process. Logs: chunkloader-policy-restart-{red-prepare,red-verify,prepare,verify}.log. See [[Chunkloader dimension policy]] for configuration, compatibility and remaining limits.
 
 

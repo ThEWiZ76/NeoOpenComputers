@@ -1,6 +1,6 @@
 # Port source surface inventory
 
-Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `c27ef60642e42ff32e430d9c3a9973bcfcfec5da`.
+Baseline: `7d9eac5584e238a890a388a0f697c27c7391caa4`. Port source: `9b53261c36574ddfe75115222062f3d01e6ea4ea`.
 
 Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.
 
@@ -63,7 +63,6 @@ Java API files: 144. Missing matching port paths: 0.
 | getMaxHeat | src/main/scala/li/cil/oc/integration/ic2/DriverReactor.java:48; src/main/scala/li/cil/oc/integration/ic2/DriverReactorChamber.java:53; src/main/scala/li/cil/oc/integration/ic2/DriverReactorRedstonePort.java:63 |
 | getMaxSteamPerTick | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSteamInfo.java:37 |
 | getMaxStoredPower | src/main/scala/li/cil/oc/integration/appeng/NetworkControl.scala:208 |
-| getName | src/main/scala/li/cil/oc/common/tileentity/RobotProxy.scala:136 |
 | getOwner | src/main/scala/li/cil/oc/integration/enderstorage/DriverFrequencyOwner.java:87; src/main/scala/li/cil/oc/integration/railcraft/DriverWorldspike.scala:31 |
 | getOwnerName | src/main/scala/li/cil/oc/integration/cofh/tileentity/DriverSecureTile.java:50 |
 | getProgress | src/main/scala/li/cil/oc/integration/forestry/DriverAnalyzer.scala:29; src/main/scala/li/cil/oc/integration/ic2/DriverMassFab.java:43 |
@@ -93,7 +92,6 @@ Java API files: 144. Missing matching port paths: 0.
 | setFrequency | src/main/scala/li/cil/oc/integration/enderstorage/DriverFrequencyOwner.java:57 |
 | setImportConfiguration | src/main/scala/li/cil/oc/integration/appeng/DriverImportBus.scala:35 |
 | setInterfaceConfiguration | src/main/scala/li/cil/oc/integration/appeng/DriverBlockInterface.scala:46; src/main/scala/li/cil/oc/integration/appeng/DriverPartInterface.scala:55 |
-| setName | src/main/scala/li/cil/oc/common/tileentity/RobotProxy.scala:126 |
 | setReading | src/main/scala/li/cil/oc/integration/tis3d/SerialInterfaceProviderAdapter.scala:63 |
 | setWirelessFrequency | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:83 |
 | setWirelessOutput | src/main/scala/li/cil/oc/server/component/RedstoneWireless.scala:63 |
