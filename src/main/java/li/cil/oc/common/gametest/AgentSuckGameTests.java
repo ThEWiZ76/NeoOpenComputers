@@ -55,7 +55,8 @@ public final class AgentSuckGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = "empty")
+    // The small template's ceiling obstructs the fake player's sightline to the cart.
+    @GameTest(template = "ae2_export")
     public static void robotSucksInventoryAndWorldItems(GameTestHelper helper) throws Exception {
         final var pos = new BlockPos(1, 2, 1);
         helper.setBlock(pos, ModBlocks.ROBOT.get());

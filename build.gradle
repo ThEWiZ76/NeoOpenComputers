@@ -158,6 +158,9 @@ runs {
         if (project.hasProperty('withTIS3D')) {
             systemProperty 'neoopencomputers.testTIS3D', 'true'
         }
+        if (project.hasProperty('withRailcraft')) {
+            systemProperty 'neoopencomputers.testRailcraft', 'true'
+        }
         if (project.hasProperty('withForestry') || project.hasProperty('withForestryButterflies')) {
             systemProperty 'neoopencomputers.testForestry', 'true'
         }
@@ -290,9 +293,18 @@ configurations {
     runtimeClasspath.extendsFrom tis3dRuntime
     forestryRuntime
     runtimeClasspath.extendsFrom forestryRuntime
+    railcraftRuntime
+    runtimeClasspath.extendsFrom railcraftRuntime
 }
 
+// Railcraft 1.2.13 declares JEI >=19.21.0.247; retain the existing pin for other profiles.
+def jeiVersion = project.hasProperty('withRailcraft') ? '19.25.0.322' : '19.21.0.246'
+
 dependencies {
+    compileOnly 'curse.maven:railcraft-reborn-901491:9257943'
+    if (project.hasProperty('withRailcraft')) {
+        railcraftRuntime 'curse.maven:railcraft-reborn-901491:9257943'
+    }
     compileOnly 'curse.maven:forestry-community-edition-1056828:8782913'
     if (project.hasProperty('withForestry') || project.hasProperty('withForestryButterflies')) {
         forestryRuntime 'curse.maven:forestry-community-edition-1056828:8782913'
@@ -309,10 +321,10 @@ dependencies {
         tis3dRuntime 'maven.modrinth:markdownmanual:MC1.21.1-neoforge-1.2.8'
         tis3dRuntime 'maven.modrinth:architectury-api:13.0.11+neoforge'
     }
-    compileOnly 'mezz.jei:jei-1.21.1-neoforge-api:19.21.0.246'
-    testImplementation 'mezz.jei:jei-1.21.1-neoforge-api:19.21.0.246'
+    compileOnly "mezz.jei:jei-1.21.1-neoforge-api:${jeiVersion}"
+    testImplementation "mezz.jei:jei-1.21.1-neoforge-api:${jeiVersion}"
     if (project.hasProperty('withJEI')) {
-        jeiRuntime 'mezz.jei:jei-1.21.1-neoforge:19.21.0.246'
+        jeiRuntime "mezz.jei:jei-1.21.1-neoforge:${jeiVersion}"
     }
     // Pinned implementation also supplies public configurator/capability helpers used by real-mod tests.
     compileOnly 'mekanism:Mekanism:1.21.1-10.7.19.85'
