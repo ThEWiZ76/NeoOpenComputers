@@ -1,5 +1,7 @@
 # AE2 manual export
 
+Follow-up: cell descriptions and auxiliary hooks are now verified in [[AE2 cell descriptions and auxiliary hooks]]. Remaining-converter statements below describe the export checkpoint.
+
 Runtime checkpoint: 37fb64458a819bd3e45377174a1cabdf69e7bf41. Minecraft 1.21.1 / NeoForge 21.1.234 / AE2 19.2.18. Related: [[AE2 interfaces and bus configuration]], [[../02 plans/AE2 integration]], [[../04 ai-context/Port gap triage]].
 
 ## Contract

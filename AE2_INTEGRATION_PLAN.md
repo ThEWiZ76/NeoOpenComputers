@@ -48,10 +48,10 @@ Files: focused integration/ae2 drivers and shared network control; AE2 GameTests
 
 Files: integration/ae2 converter, tool/spatial integration registration, EnvironmentProviders and tests.
 
-- [ ] Map upstream cell descriptor keys to modern public cell APIs: quantities/types/bytes/free capacity/fuzzy/name/content; test real item and fluid cells. Do not fabricate zero-valued legacy metrics.
-- [ ] Restore AE2 wrench behavior and upstream spatial movable whitelist for OC prints where supported; verify current public contracts and real interactions.
-- [ ] Register corresponding item EnvironmentProviders and test API environment lookup.
-- [ ] Verify absence loading, artifact/POM isolation, API linkage and mixed-mod behavior; commit/push.
+- [x] Map original cell descriptor keys through real StorageCells/BasicCellInventory APIs, preserving quantities/types/bytes/free capacity/fuzzy/name/content; actual item/fluid empty/two-type/full tests and live/wrapper input proof. Omit unavailable metrics on special cells.
+- [x] Register modern AE2 tagged-wrench OC behavior; survival adapter proof with three real tools. Modern default spatial strategy already moves OC prints; real strategy reconstruction preserves NBT/rotation. Full powered spatial cycle remains an acceptance gate.
+- [x] Existing five device EnvironmentProviders cover upstream component lookup; cell/wrench/print auxiliary hooks do not add a component type.
+- [x] Verify absence loading, artifact/POM isolation and full mixed-mod server regression; commit/push auxiliary checkpoint.
 
 ## 5. Full acceptance
 
@@ -71,3 +71,5 @@ Restart checkpoint 2b4e1b752ddeda019c877841b135e82325022f8a: journal-backed acti
 Interface/config checkpoint b40e4be50d388502ca9c2dddc34141f8ec777998: actual controller/block/panel crafting and CPU_BUSY/CPU_TOO_SMALL/NO_CPU_FOUND resource-conservation matrix;5added tests,2141 units,741-test prepare/verify JVMs,736 mixed/726 absent. Manual exportIntoSlot remains open. Reused-world ChunkMap unload hang preserved and not claimed fixed; fresh full suites pass. See [[../03 manuals/AE2 interfaces and bus configuration]].
 
 Export checkpoint 37fb64458a819bd3e45377174a1cabdf69e7bf41: actual exportIntoSlot with sided inventory/slot handling, speed/fuzzy filters, powered machine extraction, rejected-remainder refund/drop and exact item conservation. Ten new server/native tests; build/2141 units/746 mixed/726 absent pass. See [[../03 manuals/AE2 manual export]]. Converter/auxiliary, remaining crafting/stability/client gates stay open; beta3-6 concentrated workweeks, low confidence. No client/Computer Use action.
+
+Auxiliary AE2 checkpoint cf37b92c85bf5cbfb0979427e9b811959a569b97: real item/fluid cell descriptions, basic-cell capacity/content metrics, live/wrapper support and AE2 tagged-wrench OC use restored. Default spatial strategy already preserves OC print NBT/orientation; no redundant mover added. Four new tests; build/2141 units/750 mixed/726 absent green. See [[../03 manuals/AE2 cell descriptions and auxiliary hooks]]. Full spatial/client and remaining crafting/stability/global integration acceptance stay open. Beta3-6 concentrated workweeks, low confidence; no client/Computer Use action.
