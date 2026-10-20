@@ -30,3 +30,5 @@ Use fresh isolated world names, wait for normal exit0 between phases, inspect th
 ## Open scope
 
 This closes this standalone-driver/converter/userdata loading and orderly native53 case restart route, not all public APIs, host types, old binaries, crash recovery, migration or client/multiplayer/platform/load acceptance. Shared save currently starts from existing driver data to preserve built-in stack configuration. Upstream cleared-tag behavior, null dataTag fallback, lifecycle/error isolation, node-less components and external rack/adapter/portable host contracts require the remaining semantic API audit; do not call those implemented from this fixture. Beta remains3-6 concentrated workweeks with low confidence. No OS focus/mouse action or user-client update for these fixes.
+
+Verified runtime/source commit: 805cebb67a981009dcb0f57ec3b1968244d1c6e4. Default234 core SHA256a65f733f68e3ee413328cc26dc5b6e2a2196901c0f649a50cb2c62ef2a936131; not installed in the currently open user client.
