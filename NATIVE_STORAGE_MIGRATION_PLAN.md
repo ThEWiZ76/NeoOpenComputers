@@ -43,9 +43,9 @@ Files: DiskItemEnvironment, HardDiskDriveItem, FloppyItem, ModSettings; native s
 
 Files: RaidBlockEntity and RAID/native process probes.
 
-- [ ] Reproduce array payload staying in NBT; migrate the array's old tree with its preserved filesystem identity and explicit binding.
-- [ ] Keep destructive member formatting/removal semantics. Do not erase array data merely because a chunk/network reload reconstructs a mount. Verify reassembly creates a new empty volume and open-handle cleanup.
-- [ ] Test regular reload and a real native JVM restart; commit/push.
+- [x] Reproduce array payload staying in NBT; migrate the array's old tree with its preserved filesystem identity and explicit binding.
+- [x] Keep destructive member formatting/removal semantics. Do not erase array data merely because a chunk/network reload reconstructs a mount. Verify reassembly creates a new empty volume and open-handle cleanup.
+- [x] Test regular reload and a real native JVM restart; commit/push.
 
 ### 4. Raw-drive external storage
 
@@ -73,3 +73,7 @@ Case-policy checkpoint: runtime `3babca34672ca4caae7c1c3a91e3188433282404`, full
 ## Native factory checkpoint — ed36a3f965e7df4bf3fe37af7e05f257763ee05d
 
 Managed HDD/floppy binding and defaulttrue bufferChanges are implemented. Build2224 units/927 mixed required GameTests; definitive native prepare PID51244/verify PID61292 each843 required tests, normal exits. NativeVolumeStore import inspection serialized with buffered IO, no tree in new native snapshots, stored independent bindings/locks/labels/handles. [[../03 manuals/Native volume import]] records evidence, the disk-full/cache incident, limitations and exact fixture archival. The final step2 test-matrix bullet stays open for broader capacity-change/direct-process/client flows; RAID/raw remain unimplemented. Continue RAID next.
+
+## RAID binding checkpoint — 9cdb3b5947b81096b5ffde47865d9be6e9121078
+
+Step3 implemented: world binding/direct+buffered, legacy inline import/source preservation, metadata-only snapshots, durable array destruction including after unload, fresh reassembly and normal reload/whole-block item retention. Build2224 units/840 ordinary GameTests pass. Mixed native prepare PID40500/verify PID66772 each936 required tests/normal exit, actual RAID file/no-inline metadata plus Lua continuation. [[../03 manuals/RAID formatting and lifecycle persistence]] records proof/limits. Step4 compressed external raw storage is next; broad matrix/client acceptance remains open.
