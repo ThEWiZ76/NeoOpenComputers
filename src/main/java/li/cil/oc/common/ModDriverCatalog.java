@@ -76,7 +76,6 @@ import java.util.function.Supplier;
 public final class ModDriverCatalog {
     public static void registerDefaults() {
         if (API.driver instanceof DriverRegistry registry) {
-            li.cil.oc.common.integration.AppliedEnergisticsIntegration.register(registry);
             li.cil.oc.common.integration.EnderStorageIntegration.register(registry);
             registerBlocks(registry, new BeaconBlockDriver(), new BrewingStandBlockDriver(), new CommandBlockDriver(), new ComputerCaseBlockDriver(), new ComparatorBlockDriver(), new DiskDriveBlockDriver(), new EnergyStorageBlockDriver(), new FluidHandlerBlockDriver(), new FluidTankBlockDriver(), new FurnaceBlockDriver(), new InventoryBlockDriver(), new JukeboxBlockDriver(), new MobSpawnerBlockDriver(), new NoteBlockDriver(), new ScreenBlockDriver());
             registry.add(MinecraftConverters.ITEM_STACK);
@@ -89,6 +88,8 @@ public final class ModDriverCatalog {
             registry.add(MinecraftConverters.FLUID_STACK);
             registry.add(MinecraftConverters.FLUID_TANK);
             registry.add(MinecraftConverters.LEVEL);
+            // Specialized cell descriptions must follow the generic ItemStack converter (legacy display-name field).
+            li.cil.oc.common.integration.AppliedEnergisticsIntegration.register(registry);
             register(
                 registry,
                 ModItems.CPU_TIER1.get(), ModItems.CPU_TIER2.get(), ModItems.CPU_TIER3.get(), ModItems.APU_TIER1.get(), ModItems.APU_TIER2.get(),

@@ -32,10 +32,33 @@ public final class AppliedEnergisticsIntegration {
         if (ModList.get() != null && ModList.get().isLoaded("ae2")) Loaded.register(registry);
     }
 
+    public static boolean isWrench(final net.minecraft.world.item.ItemStack stack) {
+        return ModList.get() != null && ModList.get().isLoaded("ae2") && stack != null && !stack.isEmpty()
+            && Loaded.isWrench(stack);
+    }
+
+    public static boolean useWrench(final net.minecraft.world.entity.player.Player player, final BlockPos pos, final boolean changeDurability) {
+        // Modern AE2's tagged wrench tools have no durability or consumable use hook.
+        return player != null && pos != null && isWrench(player.getMainHandItem());
+    }
+
     private static final class Loaded {
         private static final ResourceLocation CONTROLLER = ResourceLocation.fromNamespaceAndPath("ae2", "controller");
 
+        static boolean isWrench(final net.minecraft.world.item.ItemStack stack) {
+            // Other mods retain their own eligibility/consumption callbacks, even when sharing the wrench tag.
+            return (stack.getItem() instanceof appeng.items.tools.quartz.QuartzWrenchItem || stack.getItem() instanceof appeng.items.tools.NetworkToolItem)
+                && appeng.util.InteractionUtil.canWrenchDisassemble(stack);
+        }
+
         static void register(final DriverRegistry registry) {
+            registry.add(new li.cil.oc.common.integration.ae2.CellConverter());
+            try {
+                li.cil.oc.common.WrenchTools.addCheck(AppliedEnergisticsIntegration.class.getMethod("isWrench", net.minecraft.world.item.ItemStack.class));
+                li.cil.oc.common.WrenchTools.addUsage(AppliedEnergisticsIntegration.class.getMethod("useWrench", net.minecraft.world.entity.player.Player.class, BlockPos.class, boolean.class));
+            } catch (NoSuchMethodException exception) {
+                throw new IllegalStateException("Missing AE2 wrench callbacks", exception);
+            }
             registry.add(new ControllerDriver());
             registry.add(new BlockInterfaceDriver());
             registry.add(new PartInterfaceDriver());
