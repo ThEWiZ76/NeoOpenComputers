@@ -75,3 +75,8 @@ World descriptors are loaded at server startup; live editing/reload/broadcast is
 ## Shared read-only handle regression — 57b2250819f0a59b8a1ea2639c5fdb6c34c8db02
 
 [[Managed disk locking]] records the later shared-wrapper fix and expands the native restart fixture with a third, internal locked managed HDD. The earlier two-drive checkpoint remains historical proof; current restartWorldLoot runs also assert3 open handles, persisted HDD lock owner and write denial after JVM restart. New world oc-restart-world-loot-managed-lock-20261020-01: PIDs59468/64684, both831 tests with normal exits; build2204 units and915 mixed tests pass. No native backend migration or client/CU action.
+
+
+## Floppy/mode follow-up
+
+[[Disk modes and floppy control]] at ce9d912a2196a1ffa30966b0316a480ee0eb358f expands current restartWorldLoot with ordinary raw/managed floppies: four disk drives plus internal HDD, four read handles and raw-byte state. Final world oc-restart-world-loot-floppy-mode-20261020-01, PIDs69044/58640, both838 tests/normal exits; build2206 units/922 mixed pass. Earlier fixture counts are historical. Current reproduction commands still use the same guarded profile/seeder with a fresh world name.

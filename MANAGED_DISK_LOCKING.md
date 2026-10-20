@@ -24,3 +24,8 @@ The restart commands use the tracked seeder and guarded restartWorldLoot/restart
 ## Remaining technical work
 
 Floppy FileSystemLike GUI/mode/lock parity and mode-switch formatting/address semantics remain separate. Native HDD/floppy/RAID save-directory/bufferChanges backend compatibility requires its own migration plan, preserving existing NBT content and source files. Full client/survival/multiplayer/platform/load acceptance remains open. No real client, Modrinth install, OS Computer Use or production operation occurred. The full port remains active; cosmetic polish stays deferred. Beta estimate3-6 concentrated workweeks, low confidence, not a feature completion percentage.
+
+
+## Floppy/mode follow-up
+
+[[Disk modes and floppy control]] at ce9d912a2196a1ffa30966b0316a480ee0eb358f closes the targeted floppy mode/lock/menu and mode-change formatting gaps. The former private save wrappers are shared in DiskItemEnvironment, preserving the lock fix. Native backend migration and client/platform/load gates remain open.
