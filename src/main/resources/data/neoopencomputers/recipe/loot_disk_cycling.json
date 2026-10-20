@@ -1,4 +1,7 @@
 {
+  "neoforge:conditions": [
+    { "type": "neoopencomputers:loot_recrafting" }
+  ],
   "type": "neoopencomputers:loot_disk_cycling",
   "category": "misc"
 }

@@ -18,6 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 final class ModSettingsTest {
     @Test
+    void lootRecraftingKeepsItsUpstreamPathAndTrueDefault() {
+        assertEquals(List.of("misc", "lootRecrafting"), ModSettings.LOOT_RECRAFTING.getPath());
+        assertEquals(true, ModSettings.lootRecrafting());
+    }
+
+    @Test
     void robotActionSettingsUseUpstreamPathsAndDefaults() {
         assertEquals(List.of("robot", "canAttackPlayers"), ModSettings.ROBOT_CAN_ATTACK_PLAYERS.getPath());
         assertFalse(ModSettings.robotCanAttackPlayers());

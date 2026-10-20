@@ -53,6 +53,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue MFU_RANGE;
     public static final ModConfigSpec.DoubleValue TRADING_RANGE;
     public static final ModConfigSpec.BooleanValue INPUT_USERNAME;
+    public static final ModConfigSpec.BooleanValue LOOT_RECRAFTING;
     public static final ModConfigSpec.BooleanValue CAN_COMPUTERS_BE_OWNED;
     public static final ModConfigSpec.IntValue MAX_USERS;
     public static final ModConfigSpec.IntValue MAX_USERNAME_LENGTH;
@@ -236,6 +237,9 @@ public final class ModSettings {
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("misc");
+        LOOT_RECRAFTING = builder
+            .comment("Allow loot disks to be cycled with a wrench. Applies when server recipes load or reload. OpenComputers upstream default is true.")
+            .define("lootRecrafting", true);
         PRESENT_CHANCE = builder.comment("Chance of a present when crafting an eligible OC item on upstream celebration dates. Zero disables presents.")
             .defineInRange("presentChance", 0.05D, 0D, 1D);
         MFU_RANGE = builder
@@ -1230,6 +1234,10 @@ public final class ModSettings {
 
     public static boolean inputUsername() {
         return booleanValue(INPUT_USERNAME);
+    }
+
+    public static boolean lootRecrafting() {
+        return booleanValue(LOOT_RECRAFTING);
     }
 
     public static boolean canComputersBeOwned() {
