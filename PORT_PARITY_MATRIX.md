@@ -755,3 +755,7 @@ Charger actual addon node/no-node lifetime, update-without-power, loaded-server-
 ## Charger GUI shift-click persistence - 2026-10-21
 
 Actual charger GUI quick-move node/no-node stale-copy bug reproduced (902 tests/2 failures; full-inventory positive control). Menu removes through the owned container before delivery and restores failed/partial insertion. Fixed902 required default tests/2241 units terminal exit0. Previous918/918 native, mixed994/absent859 gates belong to charger lifetime sourceeadbd22f9; no repeated matrix claimed for this menu-only change. See [[../03 manuals/API addon runtime]]. Combined real-client update/GUI acceptance next; wider port gates open. Beta3-6 concentrated workweeks, low confidence.
+
+## Charger GUI and native continuation actual client acceptance - 2026-10-21
+
+Installed/client-tested runtimea9166393b, core9ad818a58c5366a69925eab2a9b9a31282e4cb6efa3a900598b66559e0f1635e. Actual ChargerScreen QUICK_MOVE returns one post-disposal tablet732, reinsertion preserves node/Initialized732; native Lua5.4 sets733, graceful GUI restart40140->34444 retains733/identity/local cycle, normal shutdown/no lastError. Fresh saved item733, cleanup five blocks0/entitiesempty/no owned inventory item. See [[../03 manuals/API addon runtime]]. Live clientPID34444/no screen; overnight temporary authority active until user return, then prior coordinated screen3 rules. Wider port gates remain; beta3-6 concentrated workweeks, low confidence.
