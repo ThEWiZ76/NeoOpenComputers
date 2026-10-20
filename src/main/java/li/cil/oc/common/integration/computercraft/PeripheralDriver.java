@@ -137,12 +137,12 @@ public final class PeripheralDriver implements DriverBlock {
                     if (step >= 64 || filter == null || filter.length != 1 || !"task_complete".equals(filter[0]) || requested.isEmpty()) {
                         throw new UnsupportedOperationException("peripheral event waits/yields are unsupported");
                     }
-                    final long id = requested.removeLast();
+                    final long id = requested.removeFirst();
                     final var pending = tasks.stream().filter(task -> task.id == id && task.owner == owner).findFirst().orElseThrow();
                     tasks.remove(pending);
                     owner.requireAttached();
                     Object[] completion;
-                    try { pending.task.execute(); completion = new Object[]{"task_complete", id, true}; }
+                    try { completion = ComputerCraftArguments.taskCompletion(id, pending.task.execute()); }
                     catch (Exception exception) { completion = new Object[]{"task_complete", id, false, exception.getMessage()}; }
                     result = result.getCallback().resume(completion);
                 }

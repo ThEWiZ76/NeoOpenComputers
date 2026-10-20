@@ -7,6 +7,8 @@ import dan200.computercraft.api.lua.LuaValues;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -41,6 +43,14 @@ final class ComputerCraftArguments implements IArguments {
         return values == null ? new Object[0] : (Object[]) convert(values, false, new IdentityHashMap<>());
     }
 
+    static Object[] taskCompletion(long id, Object[] values) {
+        final var results = results(values);
+        final Object[] event = new Object[results.length + 3];
+        event[0] = "task_complete"; event[1] = id; event[2] = true;
+        System.arraycopy(results, 0, event, 3, results.length);
+        return event;
+    }
+
     private static Object convert(Object value, boolean decode, IdentityHashMap<Object, Object> seen) {
         if (value == null) return null;
         if (seen.containsKey(value)) return seen.get(value);
@@ -61,6 +71,11 @@ final class ComputerCraftArguments implements IArguments {
         if (value instanceof Object[] array) {
             final var copy = new Object[array.length]; seen.put(value, copy);
             for (int i = 0; i < array.length; i++) copy[i] = convert(array[i], decode, seen);
+            return copy;
+        }
+        if (value instanceof Collection<?> collection) {
+            final var copy = new ArrayList<Object>(collection.size()); seen.put(value, copy);
+            for (var item : collection) copy.add(convert(item, decode, seen));
             return copy;
         }
         return value;

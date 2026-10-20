@@ -89,7 +89,8 @@ public final class ComputerCraftLuaObjectGameTests {
                 test("cc_luaobject_tasks", Loaded::tasks), test("cc_luaobject_task_callback_and_yield", Loaded::callbacks),
                 test("cc_luaobject_persistence", Loaded::persistence), test("cc_luaobject_thread_guard", Loaded::threadGuard),
                 test("cc_luaobject_native_adapter_and_cc_handle", h -> nativeAdapter(h, true)),
-                test("cc_luaobject_luaj_adapter_and_cc_handle", h -> nativeAdapter(h, false)));
+                test("cc_luaobject_luaj_adapter_and_cc_handle", h -> nativeAdapter(h, false)),
+                test("cc_luaobject_collection_binary", Loaded::collectionBinary), test("cc_luaobject_fifo_callback", Loaded::fifoCallback));
         }
         interface Body { void run(GameTestHelper helper) throws Exception; }
         static TestFunction test(String name, Body body) {
@@ -145,6 +146,49 @@ public final class ComputerCraftLuaObjectGameTests {
                 h.assertTrue(((Number) value.invoke("task", context, arguments())[0]).intValue() == 1 && object.calls.get() == 1, "Annotated main-thread task did not execute exactly once");
             } finally { ((Value) value).dispose(null); }
             h.succeed();
+        }
+
+        static void collectionBinary(GameTestHelper h) throws Exception {
+            final var buffer = java.nio.ByteBuffer.wrap(new byte[]{9, 0, (byte) 128, (byte) 255, 42, 9});
+            buffer.position(1); buffer.limit(5);
+            final var data = List.of(buffer, Map.of("inner", List.of(buffer)));
+            final var value = converted(h, object(new String[]{"collection"}, (context, method, args) -> dan200.computercraft.api.lua.MethodResult.of((Object) data)));
+            try (var context = new TestContext()) {
+                final var result = OpenComputersApi.convert(value.invoke("collection", context, arguments()));
+                final var entries = (Object[]) result[0];
+                final var nested = (Object[]) ((Map<?, ?>) entries[1]).get("inner");
+                final byte[] expected = {0, (byte) 128, (byte) 255, 42};
+                h.assertTrue(entries[0] instanceof byte[] && Arrays.equals((byte[]) entries[0], expected)
+                    && nested[0] instanceof byte[] && Arrays.equals((byte[]) nested[0], expected), "Collection-shaped CC results lost raw binary data");
+                h.assertTrue(buffer.position() == 1 && buffer.limit() == 5, "Collection conversion moved the foreign ByteBuffer cursor");
+            } finally { ((Value) value).dispose(null); }
+            h.succeed();
+        }
+
+        static void fifoCallback(GameTestHelper h) throws Exception {
+            final var tail = new AtomicInteger(); final var ids = new long[2];
+            final var value = converted(h, object(new String[]{"ordered"}, (context, method, args) -> {
+                ids[0] = context.issueMainThreadTask(() -> new Object[]{"ordered-first"});
+                ids[1] = context.issueMainThreadTask(() -> { tail.incrementAndGet(); return new Object[]{"ordered-tail"}; });
+                return dan200.computercraft.api.lua.MethodResult.pullEvent("task_complete", event -> {
+                    if (((Number) event[1]).longValue() != ids[0]) throw new dan200.computercraft.api.lua.LuaException("Callback tasks completed out of issue order");
+                    return dan200.computercraft.api.lua.MethodResult.of(event[3]);
+                });
+            }));
+            final var context = new TestContext();
+            try {
+                final var result = value.invoke("ordered", context, arguments());
+                h.assertTrue(result[0].equals("ordered-first") && tail.get() == 0, "Callback eagerly ran its later fire-and-forget task");
+                h.runAfterDelay(3, () -> {
+                    try {
+                        h.assertTrue(tail.get() == 1 && context.signals.size() == 1, "Tail task was lost, duplicated or consumed as the awaited result");
+                        final var event = context.signals.getFirst();
+                        h.assertTrue(event[0].equals("task_complete") && ((Number) event[1]).longValue() == ids[1]
+                            && Boolean.TRUE.equals(event[2]) && event[3].equals("ordered-tail"), "Tail completion was delivered to the wrong callback/context");
+                        h.succeed();
+                    } finally { ((Value) value).dispose(null); context.close(); }
+                });
+            } catch (Exception failure) { ((Value) value).dispose(null); context.close(); throw failure; }
         }
         static void tasks(GameTestHelper h) throws Exception {
             final var calls = new AtomicInteger(); final var tick = new long[]{-1};
@@ -233,6 +277,12 @@ public final class ComputerCraftLuaObjectGameTests {
                 assert(h.read(2)==string.char(0,128) and h.seek('set',0)==0)
                 assert(h.readAll()==bytes); h.close()
                 local result,reason=h.read(1); assert(result==nil and tostring(reason):find('closed',1,true))
+                local values,label=p.callback()
+                assert(values,tostring(label))
+                assert(values[1]==bytes and values[2].inner[1]==bytes and label=='callback-results','peripheral callback lost binary collection results')
+                assert(p.ordered()=='ordered-first','peripheral task callback order changed')
+                local collection=o.collection()
+                assert(collection[1]==bytes and collection[2].inner[1]==bytes,'Lua object collection lost binary data')
                 local peripheralTask=p.issue(); local objectTask=o.async()
                 assert(peripheralTask~=objectTask,'peripheral and object task IDs collide')
                 local seenPeripheral,seenObject=false,false
@@ -241,6 +291,7 @@ public final class ComputerCraftLuaObjectGameTests {
                   if event=='task_complete' and id==peripheralTask then assert(ok and value=='peripheral-task'); seenPeripheral=true end
                   if event=='task_complete' and id==objectTask then assert(ok and value=='object-task' and binary==string.char(0,255)); seenObject=true end
                 end
+                assert(p.tailCount()==1,'peripheral tail task was lost or duplicated')
                 component.proxy(component.list('eeprom')()).setData('cc-object-native-verified')
                 while true do computer.pullSignal() end
                 """));

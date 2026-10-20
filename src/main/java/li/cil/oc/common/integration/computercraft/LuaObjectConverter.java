@@ -73,10 +73,7 @@ public final class LuaObjectConverter implements Converter {
 
     private static Object[] complete(PendingTask task) {
         try {
-            final var values = ComputerCraftArguments.results(task.task.execute());
-            final Object[] event = new Object[values.length + 3];
-            event[0] = "task_complete"; event[1] = task.id; event[2] = true;
-            System.arraycopy(values, 0, event, 3, values.length); return event;
+            return ComputerCraftArguments.taskCompletion(task.id, task.task.execute());
         } catch (Exception failure) { return new Object[]{"task_complete", task.id, false, failure.getMessage()}; }
     }
 
@@ -107,7 +104,7 @@ public final class LuaObjectConverter implements Converter {
                         if (step >= 64 || filter == null || filter.length != 1 || !"task_complete".equals(filter[0]) || call.requested.isEmpty()) {
                             throw new UnsupportedOperationException("Lua object event waits/yields are unsupported");
                         }
-                        final long id = call.requested.keySet().stream().reduce((a, b) -> b).orElseThrow();
+                        final long id = call.requested.keySet().iterator().next();
                         task = call.requested.remove(id); pending.remove(task);
                     }
                     if (!active) throw new IllegalStateException("ComputerCraft object is unavailable");
