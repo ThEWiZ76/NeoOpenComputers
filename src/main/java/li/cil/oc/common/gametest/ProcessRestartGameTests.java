@@ -52,6 +52,9 @@ public final class ProcessRestartGameTests {
         final String phase = System.getProperty("neoopencomputers.restartPhase", "");
         if (phase.isEmpty()) return List.of();
         if (!phase.equals("prepare") && !phase.equals("verify")) throw new IllegalArgumentException("Unknown restart phase");
+        if (Boolean.getBoolean("neoopencomputers.restartComputerCraftMedia") && !net.neoforged.fml.ModList.get().isLoaded("computercraft")) {
+            throw new IllegalStateException("CC media restart probe requires ComputerCraft");
+        }
         // The forced chunk may resume before this probe's batch starts. Supply test
         // power from the first world tick, not only when the assertions begin.
         NeoForge.EVENT_BUS.addListener((ServerTickEvent.Post event) -> {
@@ -81,7 +84,7 @@ public final class ProcessRestartGameTests {
         final var record = (ChestBlockEntity) level.getBlockEntity(RECORD);
         final var player = connectPlayer(helper);
         if (prepare) {
-            disk.setItem(0, new ItemStack(ModItems.FLOPPY.get()));
+            disk.setItem(0, Boolean.getBoolean("neoopencomputers.restartComputerCraftMedia") ? ComputerCraftMediaGameTests.restartDisk() : new ItemStack(ModItems.FLOPPY.get()));
             computer.setItem(ComputerCaseBlockEntity.SLOT_CPU, cpu());
             computer.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, new ItemStack(ModItems.MEMORY_TIER2.get()));
             computer.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, RobotMovementPersistenceGameTests.eeprom("""
@@ -90,6 +93,7 @@ public final class ProcessRestartGameTests {
                 local retained = 731
                 local drive = component.proxy(component.list('disk_drive')())
                 local fs = component.proxy(assert(drive.media()))
+                fs.setLabel('process restart media')
                 local file = assert(fs.open('restart.bin', 'w'))
                 assert(fs.write(file, 'a' .. string.char(0,255) .. 'z'))
                 fs.close(file)
@@ -144,6 +148,7 @@ public final class ProcessRestartGameTests {
                 }
             })
             .thenExecute(() -> {
+                if (Boolean.getBoolean("neoopencomputers.restartComputerCraftMedia")) ComputerCraftMediaGameTests.verifyRestartDisk(helper, disk.getItem(0));
                 final var data = new CompoundTag();
                 data.putLong("pid", ProcessHandle.current().pid());
                 data.putString("phase", prepare ? "prepared" : "verified");

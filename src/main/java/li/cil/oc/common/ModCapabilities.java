@@ -18,6 +18,7 @@ public final class ModCapabilities {
         li.cil.oc.common.integration.ComputerCraftRelayIntegration.register(event);
         if (Boolean.getBoolean("neoopencomputers.testComputerCraft") && net.neoforged.fml.ModList.get().isLoaded("computercraft")) {
             li.cil.oc.common.gametest.TestComputerCraftCapabilities.register(event);
+            li.cil.oc.common.gametest.TestComputerCraftMediaCapabilities.register(event);
         }
         if (Boolean.getBoolean("neoopencomputers.testFluidCapabilities")) {
             li.cil.oc.common.gametest.TestFluidCapabilities.register(event);

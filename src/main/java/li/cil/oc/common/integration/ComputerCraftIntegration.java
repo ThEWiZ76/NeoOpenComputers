@@ -12,6 +12,7 @@ public final class ComputerCraftIntegration {
     private static final class Loaded {
         static void register(DriverRegistry registry) {
             registry.add(new li.cil.oc.common.integration.computercraft.PeripheralDriver());
+            registry.add(new li.cil.oc.common.integration.computercraft.MediaDriver());
         }
     }
 }

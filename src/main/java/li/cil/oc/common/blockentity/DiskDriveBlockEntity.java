@@ -61,6 +61,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private Node node;
     private ManagedEnvironment diskEnvironment;
+    private CompoundTag pendingDiskState;
     private long lastAccess;
 
     public DiskDriveBlockEntity(final BlockPos pos, final BlockState blockState) {
@@ -209,6 +210,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
 
     @Override
     public ItemStack removeItem(final int slot, final int amount) {
+        if (slot == SLOT_FLOPPY && amount > 0) saveDiskToItem();
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
             setChanged();
@@ -221,6 +223,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
 
     @Override
     public ItemStack removeItemNoUpdate(final int slot) {
+        if (slot == SLOT_FLOPPY) saveDiskToItem();
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             refreshDiskEnvironment();
@@ -235,6 +238,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         if (slot != SLOT_FLOPPY) {
             return;
         }
+        saveDiskToItem();
         final ItemStack previous = items.get(SLOT_FLOPPY).copy();
         items.set(SLOT_FLOPPY, stack);
         if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) {
@@ -267,6 +271,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
 
     @Override
     public void clearContent() {
+        saveDiskToItem();
         final boolean hadDisk = !items.get(SLOT_FLOPPY).isEmpty();
         items.set(SLOT_FLOPPY, ItemStack.EMPTY);
         setChanged();
@@ -305,6 +310,8 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
             final CompoundTag diskTag = new CompoundTag();
             diskEnvironment.save(diskTag);
             nbt.put(TAG_DISK, diskTag);
+        } else if (pendingDiskState != null && pendingDiskState.contains(TAG_DISK)) {
+            nbt.put(TAG_DISK, pendingDiskState.getCompound(TAG_DISK).copy());
         }
     }
 
@@ -348,6 +355,8 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     public void onLoad() {
         super.onLoad();
         if (level != null && !level.isClientSide) {
+            // External media may require a ServerLevel, unavailable during loadAdditional.
+            if (diskEnvironment == null && !items.get(SLOT_FLOPPY).isEmpty()) refreshDiskEnvironment(pendingDiskState);
             Network.joinOrCreateNetwork(this);
         }
     }
@@ -368,7 +377,13 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         refreshDiskEnvironment(null);
     }
 
+    private void saveDiskToItem() {
+        // Save while the original stack is still present, before split/take copies its item data.
+        if (diskEnvironment != null) diskEnvironment.save(new CompoundTag());
+    }
+
     private void refreshDiskEnvironment(final CompoundTag savedState) {
+        pendingDiskState = null;
         if (diskEnvironment != null && diskEnvironment.node() != null) {
             diskEnvironment.node().remove();
         }
@@ -381,6 +396,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
         // Restore addresses and open files before publishing nodes to the network.
         if (savedState != null) {
             load(savedState);
+            if (diskEnvironment == null && level == null && !stack.isEmpty()) pendingDiskState = savedState.copy();
         }
         connectDiskEnvironment();
     }
