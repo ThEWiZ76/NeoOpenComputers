@@ -10,6 +10,11 @@ public interface Machine extends ManagedEnvironment, Context {
 
     void onHostChanged();
 
+    /** Persist an installed component before its item stack is copied, shrunk or replaced. */
+    default void saveComponentData(final ItemStack stack) {
+        if (stack != null && !stack.isEmpty()) save(new net.minecraft.nbt.CompoundTag());
+    }
+
     /** Notify a physical EEPROM replacement. Implementations may rebuild if hot-swap is unsupported. */
     default void onEepromChanged(final ItemStack previous, final ItemStack replacement) {
         onHostChanged();

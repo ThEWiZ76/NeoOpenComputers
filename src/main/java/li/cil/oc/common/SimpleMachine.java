@@ -213,6 +213,11 @@ final class SimpleMachine extends AbstractManagedEnvironment implements Machine,
     }
 
     @Override
+    public void saveComponentData(final ItemStack stack) {
+        if (stack != null && !stack.isEmpty()) saveComponentEnvironment(environmentsByStack.get(stack));
+    }
+
+    @Override
     public void onEepromChanged(final ItemStack previous, final ItemStack replacement) {
         final DriverItem driver = Driver.driverFor(replacement, host.getClass());
         if (driver == null || !"eeprom".equals(driver.slot(replacement))) {

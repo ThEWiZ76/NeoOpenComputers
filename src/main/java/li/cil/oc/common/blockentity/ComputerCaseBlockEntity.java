@@ -643,6 +643,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         if (!isValidSlotForTier(slot)) {
             return ItemStack.EMPTY;
         }
+        if (amount > 0) machine.saveComponentData(items.get(slot));
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
             setChanged();
@@ -658,6 +659,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         if (!isValidSlotForTier(slot)) {
             return ItemStack.EMPTY;
         }
+        machine.saveComponentData(items.get(slot));
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             notifyHardwareChanged(machine);
@@ -672,6 +674,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
         if (!isValidSlotForTier(slot)) {
             return;
         }
+        machine.saveComponentData(items.get(slot));
         final ItemStack previous = items.get(slot).copy();
         items.set(slot, stack);
         if (!stack.isEmpty() && stack.getCount() > getMaxStackSize()) {
@@ -697,6 +700,7 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
 
     @Override
     public void clearContent() {
+        for (ItemStack stack : items) machine.saveComponentData(stack);
         final ItemStack previousFloppy = floppyStack().copy();
         final boolean hadCpu = hasCpuStack();
         fillExistingSlots(items, ItemStack.EMPTY);
@@ -746,8 +750,12 @@ public class ComputerCaseBlockEntity extends BlockEntity implements Case, MenuPr
             wakeThreshold = tag.getInt(TAG_WAKE_THRESHOLD);
             loadRedstoneOutputs(tag);
             ContainerHelper.loadAllItems(tag, items, registries);
-            notifyHardwareChanged(machine);
-            machine.load(tag.getCompound(TAG_MACHINE));
+            // World-bound component drivers cannot initialize during loadStatic's world-less phase.
+            if (level == null) unloadedState = tag.copy();
+            else {
+                notifyHardwareChanged(machine);
+                machine.load(tag.getCompound(TAG_MACHINE));
+            }
             lastSyncedRunning = isMachineRunningForClient();
             lastSyncedErrored = isMachineErroredForClient();
             loadClientData(tag);

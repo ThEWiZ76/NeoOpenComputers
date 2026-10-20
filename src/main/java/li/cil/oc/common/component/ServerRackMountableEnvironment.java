@@ -128,11 +128,9 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         this.itemOwner = itemOwner;
         this.itemData = itemData;
         this.items = NonNullList.withSize(slotCount(this.tier), ItemStack.EMPTY);
-        final var builder = Network.newNode(this, Visibility.Network);
-        if (builder != null) {
-            setNode(builder.create());
-        }
         machine = li.cil.oc.api.Machine.create(this);
+        // As upstream, the configured main bus exposes the computer itself, including its connector.
+        setNode(machine.node());
         if (itemData != null) {
             load(itemData);
         }
@@ -442,7 +440,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public void load(final CompoundTag nbt) {
-        super.load(nbt);
+        // The nested machine snapshot owns this node. The old outer node had no connector buffer.
         ContainerHelper.loadAllItems(nbt, items, world() == null ? null : world().registryAccess());
         if (machine != null) {
             machine.onHostChanged();
@@ -489,6 +487,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         if (!isValidSlot(slot)) {
             return ItemStack.EMPTY;
         }
+        if (amount > 0) machine.saveComponentData(items.get(slot));
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
             markChanged();
@@ -502,6 +501,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         if (!isValidSlot(slot)) {
             return ItemStack.EMPTY;
         }
+        machine.saveComponentData(items.get(slot));
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             notifyHardwareChanged();
@@ -514,6 +514,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
         if (!isValidSlot(slot) || (!stack.isEmpty() && !canPlaceItem(slot, stack))) {
             return;
         }
+        machine.saveComponentData(items.get(slot));
         final ItemStack stored = stack.copy();
         if (!stored.isEmpty() && stored.getCount() > getMaxStackSize()) {
             stored.setCount(getMaxStackSize());
@@ -552,6 +553,7 @@ public final class ServerRackMountableEnvironment extends AbstractManagedEnviron
 
     @Override
     public void clearContent() {
+        for (ItemStack stack : items) machine.saveComponentData(stack);
         for (int index = 0; index < items.size(); index++) {
             items.set(index, ItemStack.EMPTY);
         }

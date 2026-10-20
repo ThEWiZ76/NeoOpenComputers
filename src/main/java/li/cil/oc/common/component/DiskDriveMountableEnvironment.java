@@ -251,6 +251,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         if (slot != DiskDriveBlockEntity.SLOT_FLOPPY) {
             return ItemStack.EMPTY;
         }
+        if (amount > 0) saveDiskToItem();
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
             markChanged();
@@ -265,6 +266,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         if (slot != DiskDriveBlockEntity.SLOT_FLOPPY) {
             return ItemStack.EMPTY;
         }
+        saveDiskToItem();
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             refreshDiskEnvironment();
@@ -278,6 +280,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         if (slot != DiskDriveBlockEntity.SLOT_FLOPPY || (!stack.isEmpty() && !canPlaceItem(slot, stack))) {
             return;
         }
+        saveDiskToItem();
         final ItemStack previous = items.get(DiskDriveBlockEntity.SLOT_FLOPPY).copy();
         final ItemStack stored = stack.copy();
         if (!stored.isEmpty() && stored.getCount() > getMaxStackSize()) {
@@ -318,6 +321,7 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
 
     @Override
     public void clearContent() {
+        saveDiskToItem();
         final boolean hadDisk = !items.get(DiskDriveBlockEntity.SLOT_FLOPPY).isEmpty();
         items.set(DiskDriveBlockEntity.SLOT_FLOPPY, ItemStack.EMPTY);
         markChanged();
@@ -325,6 +329,10 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
         if (hadDisk) {
             ModSounds.playDiskEject(this);
         }
+    }
+
+    private void saveDiskToItem() {
+        if (diskEnvironment != null) diskEnvironment.save(new CompoundTag());
     }
 
     private void refreshDiskEnvironment() {

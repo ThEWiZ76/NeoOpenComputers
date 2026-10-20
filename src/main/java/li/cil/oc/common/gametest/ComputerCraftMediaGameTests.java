@@ -27,6 +27,11 @@ public final class ComputerCraftMediaGameTests {
         return Loaded.tests();
     }
     public static ItemStack restartDisk() { return Loaded.disk(); }
+    public static ItemStack hostRestartDisk() { return Loaded.hostDisk(); }
+    public static void verifyHostRestartDisk(GameTestHelper helper, ItemStack stack) {
+        Loaded.verifyNative(helper, stack, "host.bin", "CC host restart", new byte[]{'r', 0, (byte) 255, 'k'});
+        li.cil.oc.NeoOpenComputers.LOGGER.info("CC internal/rack media bytes and label verified in PID {}", ProcessHandle.current().pid());
+    }
     public static void verifyRestartDisk(GameTestHelper helper, ItemStack stack) {
         Loaded.verifyNative(helper, stack, "restart.bin", "process restart media", new byte[]{'a', 0, (byte) 255, 'z'});
         li.cil.oc.NeoOpenComputers.LOGGER.info("Native CC media restart bytes and label verified in PID {}", ProcessHandle.current().pid());
@@ -34,13 +39,18 @@ public final class ComputerCraftMediaGameTests {
 
     private static final class Loaded {
         static Collection<TestFunction> tests() {
-            return List.of(test("cc_media_native_disk", Loaded::nativeDisk), test("cc_media_readonly", Loaded::readOnly), test("cc_media_no_data", Loaded::noData), test("cc_media_deferred_world_load", Loaded::deferredWorldLoad));
+            return List.of(test("cc_media_native_disk", Loaded::nativeDisk), test("cc_media_readonly", Loaded::readOnly), test("cc_media_no_data", Loaded::noData), test("cc_media_deferred_world_load", Loaded::deferredWorldLoad), test("cc_media_case_internal_world_load", Loaded::internalCaseLoad));
         }
         static TestFunction test(String name, java.util.function.Consumer<GameTestHelper> body) {
             return new TestFunction("ccMedia", name, "neoopencomputers:ae2_export", 600, 0, true, body);
         }
         static ItemStack disk() {
             return new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("computercraft", "disk")));
+        }
+        static ItemStack hostDisk() {
+            final var stack = disk();
+            if (!stack.getCapability(dan200.computercraft.api.media.MediaCapability.get()).setLabel(stack, "CC host restart")) throw new IllegalStateException("Native CC disk label rejected");
+            return stack;
         }
         static void verifyNative(GameTestHelper helper, ItemStack stack, String path, String label, byte[] expected) {
             final var media = stack.getCapability(dan200.computercraft.api.media.MediaCapability.get());
@@ -133,6 +143,25 @@ public final class ComputerCraftMediaGameTests {
             final var restored = DiskDriveEjectionGameTests.filesystem(helper, new DiskDriveEjectionGameTests.Hardware(loaded, hardware.computer()));
             helper.assertTrue(address.equals(restored.address()), "CC filesystem identity lost when block data loaded before world assignment");
             loaded.clearContent(); helper.succeed();
+        }
+
+        static void internalCaseLoad(GameTestHelper helper) {
+            final var world = helper.getLevel(); final var pos = helper.absolutePos(new net.minecraft.core.BlockPos(3, 2, 3));
+            final var state = li.cil.oc.common.ModBlocks.COMPUTER_CASE_TIER3.get().defaultBlockState();
+            world.setBlockAndUpdate(pos, state);
+            final var original = (li.cil.oc.common.blockentity.ComputerCaseBlockEntity) world.getBlockEntity(pos); original.onLoad();
+            helper.assertTrue(original.canPlaceItem(7, disk()), "Tier3 internal floppy slot rejected native CC disk"); original.setItem(7, disk());
+            final var fs = internalFilesystem(helper, original); final var address = fs.address();
+            final var saved = original.saveWithFullMetadata(world.registryAccess()); world.removeBlockEntity(pos);
+            final var loaded = new li.cil.oc.common.blockentity.ComputerCaseBlockEntity(pos, state);
+            loaded.loadWithComponents(saved, world.registryAccess()); loaded.setLevel(world); world.setBlockEntity(loaded); loaded.onLoad();
+            helper.assertTrue(address.equals(internalFilesystem(helper, loaded).address()), "Internal CC media identity lost on deferred case load");
+            loaded.clearContent(); helper.succeed();
+        }
+        static li.cil.oc.api.network.Component internalFilesystem(GameTestHelper helper, li.cil.oc.common.blockentity.ComputerCaseBlockEntity computer) {
+            for (var node : computer.machine().node().reachableNodes()) if (node instanceof li.cil.oc.api.network.Component component && component.name().equals("filesystem")
+                && computer.componentSlot(component.address()) == 7) return component;
+            helper.fail("Tier3 case did not expose its internal CC filesystem"); return null;
         }
     }
 }
