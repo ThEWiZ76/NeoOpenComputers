@@ -30,11 +30,26 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
 final class FileSystemRegistry implements FileSystemAPI {
+    private final Supplier<Path> saveRoot;
+
+    FileSystemRegistry() {
+        this(() -> {
+            final var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
+            return server == null ? null : server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT);
+        });
+    }
+
+    FileSystemRegistry(Supplier<Path> saveRoot) {
+        this.saveRoot = Objects.requireNonNull(saveRoot);
+    }
+
     @Override
     public FileSystem fromClass(final Class<?> clazz, final String domain, final String root) {
         final ClassLoader classLoader = clazz.getClassLoader();
@@ -58,7 +73,21 @@ final class FileSystemRegistry implements FileSystemAPI {
 
     @Override
     public FileSystem fromSaveDirectory(final String root, final long capacity, final boolean buffered) {
-        return new DirectoryFileSystem(Path.of(root), capacity);
+        Objects.requireNonNull(root, "root");
+        if (Path.of(root).isAbsolute() || root.startsWith("\\")) {
+            throw new IllegalArgumentException("save directory must be world-relative");
+        }
+        final String[] segments = pathSegments(root);
+        final Path world = saveRoot.get();
+        if (world == null) return null;
+        Path directory = world.toAbsolutePath().normalize().resolve("opencomputers");
+        for (final String segment : segments) directory = directory.resolve(segment);
+        try {
+            return new DirectoryFileSystem(directory, capacity);
+        } catch (IllegalArgumentException failure) {
+            li.cil.oc.NeoOpenComputers.LOGGER.warn("Cannot open world-local filesystem {}", directory, failure);
+            return null;
+        }
     }
 
     @Override

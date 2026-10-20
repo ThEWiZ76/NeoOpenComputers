@@ -214,8 +214,8 @@ final class FileSystemRegistryTest {
 
     @Test
     void saveDirectoryFileSystemPersistsFilesOnDisk() throws IOException {
-        FileSystemRegistry registry = new FileSystemRegistry();
-        FileSystem fileSystem = registry.fromSaveDirectory(tempDir.toString(), 128, true);
+        FileSystemRegistry registry = new FileSystemRegistry(() -> tempDir);
+        FileSystem fileSystem = registry.fromSaveDirectory("drive", 128, false);
 
         assertNotNull(fileSystem);
         assertFalse(fileSystem.isReadOnly());
@@ -225,8 +225,8 @@ final class FileSystemRegistryTest {
         fileSystem.getHandle(outputHandle).write("hello".getBytes(StandardCharsets.UTF_8));
         fileSystem.getHandle(outputHandle).close();
 
-        assertEquals("hello", Files.readString(tempDir.resolve("tmp").resolve("data.txt")));
-        FileSystem reloaded = registry.fromSaveDirectory(tempDir.toString(), 128, true);
+        assertEquals("hello", Files.readString(tempDir.resolve("opencomputers/drive/tmp/data.txt")));
+        FileSystem reloaded = registry.fromSaveDirectory("drive", 128, false);
         int inputHandle = reloaded.open("tmp/data.txt", Mode.Read);
         byte[] buffer = new byte[5];
         assertEquals(5, reloaded.getHandle(inputHandle).read(buffer));
@@ -236,10 +236,43 @@ final class FileSystemRegistryTest {
 
     @Test
     void saveDirectoryFileSystemRejectsPathEscape() {
-        FileSystem fileSystem = new FileSystemRegistry().fromSaveDirectory(tempDir.toString(), 128, true);
+        FileSystem fileSystem = new FileSystemRegistry(() -> tempDir).fromSaveDirectory("drive", 128, false);
 
         assertThrows(IllegalArgumentException.class, () -> fileSystem.exists("../outside.txt"));
         assertThrows(IllegalArgumentException.class, () -> fileSystem.open("tmp/../outside.txt", Mode.Write));
+    }
+
+    @Test
+    void saveDirectoryTracksTheCurrentWorldWithoutSharingDriveNames() throws IOException {
+        final var world = new java.util.concurrent.atomic.AtomicReference<>(tempDir.resolve("first"));
+        final var registry = new FileSystemRegistry(world::get);
+        final var first = registry.fromSaveDirectory("addon/drive", 4096, false);
+        final int id = first.open("marker", Mode.Write);
+        first.getHandle(id).write(new byte[]{1, 2, 3});
+        first.close();
+        world.set(tempDir.resolve("second"));
+        final var second = registry.fromSaveDirectory("addon/drive", 4096, false);
+        assertFalse(second.exists("marker"));
+        second.close();
+        world.set(tempDir.resolve("first"));
+        final var reloaded = registry.fromSaveDirectory("addon/drive", 4096, false);
+        assertTrue(reloaded.exists("marker"));
+        reloaded.close();
+        assertArrayEquals(new byte[]{1, 2, 3}, Files.readAllBytes(tempDir.resolve("first/opencomputers/addon/drive/marker")));
+    }
+
+    @Test
+    void saveDirectoryRequiresAWorldAndRejectsEscapingNames() throws IOException {
+        final var registry = new FileSystemRegistry(() -> null);
+        assertNull(registry.fromSaveDirectory("addon/drive", 4096, false));
+        for (final var root : List.of("../outside", "addon/../outside", "C:outside", "\\outside", tempDir.toString())) {
+            assertThrows(IllegalArgumentException.class, () -> registry.fromSaveDirectory(root, 4096, false));
+        }
+        final var occupied = tempDir.resolve("opencomputers/occupied");
+        Files.createDirectories(occupied.getParent());
+        Files.writeString(occupied, "preserve");
+        assertNull(new FileSystemRegistry(() -> tempDir).fromSaveDirectory("occupied", 4096, false));
+        assertEquals("preserve", Files.readString(occupied));
     }
 
     @Test
