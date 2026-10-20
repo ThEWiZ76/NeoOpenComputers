@@ -1,0 +1,15 @@
+# Loot disk cycling
+
+Runtime b9ab176319f56fc6c8a882502a6006d01eef2206; verified2026-10-20. Prerequisite found while implementing [[../02 plans/JEI integration]]. Upstream: common/Loot.scala registerLootDisk/disksForCycling/isLootDisk and common/recipe/LootDiskCyclingRecipe.scala.
+
+The previous recipe rebuilt its output list from bundled descriptors only. Public API registered addon disks were omitted. It also treated doRecipeCycling=false as rejection of an input; upstream uses this flag only to exclude a disk from the output cycle, while all loot-factory disks remain valid inputs. Legacy oc:lootFactory keys were rejected too.
+
+ItemRegistry now retains copied cycling templates in insertion order, keyed by factory ID. Opted-out registrations are absent from outputs. ModLootDisks.stacksForCycling returns fresh copies of the registered list, and the actual recipe uses that list. Bundled descriptor enumeration remains separately available. Re-registering an identity updates its template without duplicating its position. No save format or published API interface changes.
+
+The recipe recognizes a present string factory field, including unknown/empty IDs and the supported legacy key, while a plain writable floppy stays invalid. Unknown identities recraft to the first eligible disk; recognized identities advance and wrap. The legacy-key test deliberately uses the existing modern factory value: it does not establish conversion of old1.12 mod/factory namespaces or entire worlds. Wrench retention and ordinary crafting consumption remain unchanged.
+
+Three cases first reproduced addon-output omission, false-flag input rejection and legacy-key rejection in796 baseline tests. Four final GameTests use real registered item stacks, the public registration API and actual recipe.matches/assemble/getRemainingItems: addon A->B, last bundled->A, final addon->first, caller mutation of the registered return/snapshot, opted-out input, legacy-key input, empty/unknown identity and ordinary-disk rejection. Fixtures temporarily install an isolated item registry with the real content/default disks and restore the prior API in finally; no test addon entries remain in the active registry. Factories return null because these cases test crafting metadata, not filesystem opening or contents.
+
+Validation: build/all2187 units, all872 mixed-provider tests (JEI/CC/ProjectRed/Mekanism/AE2/EnderStorage) and all797 no-optional tests pass with complete GameTest summaries and normal process exit. Evidence: build/finish-port-implementation/loot-cycling-{red,mixed,absent}-{build,latest,debug}.log. No new VM/process-restart or real-client crafting proof is claimed.
+
+Next: verify public addon factory identity across a fresh JVM. The public registration overload currently generates a UUID, unlike upstream's stable mod/name identity; this needs a reproduction before correction. Also finish JEI subtypes/display/runtime additions, authoritative client metadata synchronization and external-world loot-source scope. Actual client/survival/multiplayer/load/migration/full-port acceptance remain open. Beta3-6 concentrated workweeks, low confidence.

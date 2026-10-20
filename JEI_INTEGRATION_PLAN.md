@@ -18,3 +18,6 @@ Target MC1.21.1/NeoForge21.1.234. Pinned JEI19.21.0.246; newer19.64 needs loader
 - [ ] End-to-end installed artifact/version/hash and release documentation evidence.
 
 The current server runs prove compatibility with optional jars and without them. They do not execute the JEI client registration/render path. Preserve rejected-launch evidence: the newer JEI loader error returned Gradle success without GameTests, so every gate must require its real test summary. Full port and beta acceptance remain open.
+
+
+Loot cycling checkpoint b9ab176319f56fc6c8a882502a6006d01eef2206: actual crafting now uses copied, ordered API-registered cycling templates; opt-out controls outputs rather than valid loot inputs. Legacy string keys and unknown/empty identity fallback are restored, ordinary disks remain rejected. Three baseline failures in796 tests; four final cases cover registered/bundled sequence/wrap, wrench retention and template isolation. Build/2187 units/872 mixed/797 absent pass normally. See [[../03 manuals/Loot disk cycling]]. This is a core prerequisite, not completion of the JEI recipe display. Public addon factory restart identity, client registry sync/external loot sources and full JEI/client/port gates remain open. Beta3-6 concentrated workweeks, low confidence.
