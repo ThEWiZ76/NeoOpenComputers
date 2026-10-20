@@ -15,6 +15,7 @@ public final class ModCapabilities {
     }
 
     public static void register(final RegisterCapabilitiesEvent event) {
+        li.cil.oc.common.integration.ComputerCraftRelayIntegration.register(event);
         if (Boolean.getBoolean("neoopencomputers.testFluidCapabilities")) {
             li.cil.oc.common.gametest.TestFluidCapabilities.register(event);
         }

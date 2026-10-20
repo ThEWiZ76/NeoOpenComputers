@@ -22,6 +22,7 @@ import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.component.LinkedNetwork;
+import li.cil.oc.common.integration.ComputerCraftRelayIntegration;
 import li.cil.oc.common.item.LinkedCardItem;
 import li.cil.oc.common.menu.RelayMenu;
 import net.minecraft.core.BlockPos;
@@ -91,6 +92,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     private long visualActivitySequence;
     private long clientVisualActivitySequence;
     private long clientVisualActivityUntilMillis;
+    private ComputerCraftRelayIntegration.Receiver computerCraftReceiver;
 
     public RelayBlockEntity(final BlockPos pos, final BlockState blockState) {
         super(ModBlockEntities.RELAY.get(), pos, blockState);
@@ -237,6 +239,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     }
 
     public void removeNodes() {
+        if (computerCraftReceiver != null) computerCraftReceiver.clear();
         Network.leaveWirelessNetwork(this);
         LinkedNetwork.remove(this);
         for (final Plug plug : plugs) {
@@ -246,6 +249,11 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
 
     public int maxQueueSize() {
         return maxQueueSize;
+    }
+
+    public ComputerCraftRelayIntegration.Receiver computerCraftReceiver() {
+        if (computerCraftReceiver == null) computerCraftReceiver = ComputerCraftRelayIntegration.create(this);
+        return computerCraftReceiver;
     }
 
     public int relayDelay() {
@@ -306,7 +314,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     @Override
     public void receivePacket(final Packet packet, final WirelessEndpoint sender) {
         if (wirelessEnabled && packet != null) {
-            enqueue(null, packet);
+            tryEnqueuePacket(null, packet);
         }
     }
 
@@ -318,7 +326,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
     @Override
     public void receiveLinkedPacket(final Packet packet) {
         if (linkedEnabled && packet != null) {
-            enqueue(null, packet);
+            tryEnqueuePacket(null, packet);
         }
     }
 
@@ -418,15 +426,19 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
         setChanged();
     }
 
-    private void enqueue(final Direction sourceSide, final Packet packet) {
+    public boolean tryEnqueuePacket(final Direction sourceSide, final Packet packet) {
+        if (packet == null) return false;
+        final var receiver = computerCraftReceiver();
+        if (receiver != null) receiver.receive(packet);
         if (packet.ttl() <= 0 || queue.size() >= maxQueueSize) {
-            return;
+            return false;
         }
         queue.add(new QueuedPacket(sourceSide, packet.hop()));
         if (relayCooldown < 0) {
             relayCooldown = relayDelay - 1;
         }
         setChanged();
+        return true;
     }
 
     private void relayQueuedPacket() {
@@ -689,7 +701,7 @@ public class RelayBlockEntity extends BlockEntity implements SidedEnvironment, C
                 return;
             }
             if (message.data().length == 1 && message.data()[0] instanceof Packet packet) {
-                enqueue(side, packet);
+                tryEnqueuePacket(side, packet);
             }
         }
 

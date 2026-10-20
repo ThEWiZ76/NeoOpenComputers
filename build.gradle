@@ -262,6 +262,7 @@ dependencies {
         projectRedRuntime 'mrtjp:ProjectRed:1.21.1-4.23.0:transmission'
     }
     compileOnly 'cc.tweaked:cc-tweaked-1.21.1-common-api:1.120.2'
+    compileOnly 'cc.tweaked:cc-tweaked-1.21.1-forge-api:1.120.2'
     if (project.hasProperty('withComputerCraft')) {
         computerCraftRuntime 'cc.tweaked:cc-tweaked-1.21.1-forge:1.120.2'
     }
