@@ -9,6 +9,7 @@ import li.cil.oc.common.ItemRegistry;
 import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
+import li.cil.oc.common.blockentity.ChargerBlockEntity;
 import li.cil.oc.common.blockentity.MicrocontrollerBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RobotBlockEntity;
@@ -50,6 +51,8 @@ public final class NativeHostsProcessRestartGameTests {
         for (final var version : List.of("5.3", "5.4"))
             for (final var kind : List.of("case", "rack", "microcontroller", "robot", "drone"))
                 result.add(new Fixture(kind, version, result.size()));
+        if (Boolean.getBoolean("neoopencomputers.testApiSmokeAddon"))
+            for (final var version : List.of("5.3", "5.4")) result.add(new Fixture("charger", version, result.size()));
         return result;
     }
 
@@ -118,12 +121,21 @@ public final class NativeHostsProcessRestartGameTests {
         final boolean addon = Boolean.getBoolean("neoopencomputers.testApiSmokeAddon");
         final var card = addon ? AddonLifecycleGameTests.card("native-" + fixture.kind + "-" + fixture.version, false) : ItemStack.EMPTY;
         switch (fixture.kind) {
-            case "case" -> {
+            case "case", "charger" -> {
                 level.setBlockAndUpdate(pos, ModBlocks.COMPUTER_CASE_TIER1.get().defaultBlockState());
                 final var host = (ComputerCaseBlockEntity) level.getBlockEntity(pos);
                 host.setItem(ComputerCaseBlockEntity.SLOT_CPU, cpu); host.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, ram);
                 host.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, eeprom);
-                if (addon) host.setItem(0, card);
+                if (fixture.kind.equals("charger")) {
+                    helper.assertTrue(level.isEmptyBlock(pos.east()), "Charger restart fixture requires empty companion space");
+                    level.setBlockAndUpdate(pos.east(), ModBlocks.CHARGER.get().defaultBlockState());
+                    final var charger = (ChargerBlockEntity) level.getBlockEntity(pos.east());
+                    final var data = card.get(DataComponents.CUSTOM_DATA).copyTag();
+                    data.putBoolean("oc_api_smoke_tablet", true); data.putBoolean("oc_api_smoke_require_world", true);
+                    card.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+                    helper.assertTrue(charger.canPlaceItem(0, card), "Charger restart addon item rejected");
+                    charger.setItem(0, card);
+                } else if (addon) host.setItem(0, card);
             }
             case "rack" -> {
                 level.setBlockAndUpdate(pos, ModBlocks.RACK.get().defaultBlockState());

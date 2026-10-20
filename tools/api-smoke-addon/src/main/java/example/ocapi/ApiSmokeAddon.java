@@ -85,8 +85,10 @@ public final class ApiSmokeAddon {
         @Override
         public ManagedEnvironment createEnvironment(ItemStack stack, EnvironmentHost host) {
             final var data = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+            if (data.getBoolean("oc_api_smoke_require_world") && (host.world() == null || host.world().isClientSide))
+                throw new IllegalStateException("API smoke fixture requires a loaded server world");
             if (data.contains("oc_api_smoke_failure")) return new FailingEnvironment(data.getString("oc_api_smoke_lifecycle_id"), data.getString("oc_api_smoke_failure"));
-            if (data.contains("oc_api_smoke_lifecycle_id")) return new TrackedEnvironment(data.getString("oc_api_smoke_lifecycle_id"), data.getBoolean("oc_api_smoke_no_node"));
+            if (data.contains("oc_api_smoke_lifecycle_id")) return new TrackedEnvironment(data.getString("oc_api_smoke_lifecycle_id"), data.getBoolean("oc_api_smoke_no_node"), data.getBoolean("oc_api_smoke_dispose_increment"));
             return new Card();
         }
     }
@@ -107,19 +109,28 @@ public final class ApiSmokeAddon {
         private final List<String> trace = new ArrayList<>();
         private LifecycleState phase;
         private boolean loaded, updated, updatedOutsideLifetime;
+        private final boolean disposeIncrement;
         private int value;
 
         TrackedEnvironment(String id, boolean noNode) {
+            this(id, noNode, false);
+        }
+        TrackedEnvironment(String id, boolean noNode, boolean disposeIncrement) {
+            this.disposeIncrement = disposeIncrement;
             if (!noNode) setNode(Network.newNode(this, Visibility.Network).withComponent("api_lifecycle").create());
             TRACKED.computeIfAbsent(id, ignored -> new ArrayList<>()).add(this);
         }
 
         Map<String, Object> observation() {
             return Map.of("phase", phase == null ? "missing" : phase.name(), "trace", List.copyOf(trace),
-                "loaded", loaded, "updated", updated, "updatedOutsideLifetime", updatedOutsideLifetime, "value", value);
+                "loaded", loaded, "updated", updated, "updatedOutsideLifetime", updatedOutsideLifetime, "value", value,
+                "address", node() == null || node().address() == null ? "" : node().address());
         }
 
-        @Override public void onLifecycleStateChange(LifecycleState state) { phase = state; trace.add(state.name()); }
+        @Override public void onLifecycleStateChange(LifecycleState state) {
+            phase = state; trace.add(state.name());
+            if (disposeIncrement && state == LifecycleState.Disposing) value++;
+        }
         @Override public boolean canUpdate() { return true; }
         @Override public void update() { updated = true; if (phase != LifecycleState.Initialized) updatedOutsideLifetime = true; }
         @Override public void load(CompoundTag data) { trace.add("load"); super.load(data); value = data.getInt("trackedValue"); loaded = true; }

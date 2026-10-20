@@ -10,6 +10,7 @@ import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.AdapterBlockEntity;
 import li.cil.oc.common.blockentity.RobotBlockEntity;
+import li.cil.oc.common.blockentity.ChargerBlockEntity;
 import li.cil.oc.common.item.ItemDriverData;
 import li.cil.oc.common.machine.NativeLua53Architecture;
 import net.minecraft.core.BlockPos;
@@ -24,6 +25,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 
 import java.nio.charset.StandardCharsets;
@@ -43,7 +47,11 @@ public final class AddonLifecycleGameTests {
             new TestFunction("addonLifecycle", "addon_lifecycle_nodeless_update_and_save", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::noNode),
             new TestFunction("addonLifecycle", "addon_lifecycle_rack_bus_and_removal", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::rack),
             new TestFunction("addonLifecycle", "addon_lifecycle_adapter_nodeless", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::adapter),
-            new TestFunction("addonLifecycle", "addon_lifecycle_robot_runtime_unload", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::robotRuntime));
+            new TestFunction("addonLifecycle", "addon_lifecycle_robot_runtime_unload", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::robotRuntime),
+            new TestFunction("addonLifecycle", "addon_lifecycle_charger_node", "neoopencomputers:empty", 400, 0, true, helper -> charger(helper, false)),
+            new TestFunction("addonLifecycle", "addon_lifecycle_charger_nodeless", "neoopencomputers:empty", 400, 0, true, helper -> charger(helper, true)),
+            new TestFunction("addonLifecycle", "addon_lifecycle_charger_break_node", "neoopencomputers:empty", 100, 0, true, helper -> chargerBreak(helper, false)),
+            new TestFunction("addonLifecycle", "addon_lifecycle_charger_break_nodeless", "neoopencomputers:empty", 100, 0, true, helper -> chargerBreak(helper, true)));
     }
 
     static ItemStack card(String id, boolean noNode) {
@@ -173,6 +181,66 @@ public final class AddonLifecycleGameTests {
             final var removed = active[0].removeItemNoUpdate(1); disposed(helper, id);
             helper.assertTrue(ItemDriverData.dataTag(removed).getInt("trackedValue") == 731, "Removed robot addon lost value");
         }).thenSucceed();
+    }
+
+    private static void charger(GameTestHelper helper, boolean noNode) {
+        final String id = "charger-lifecycle-" + noNode;
+        final var pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.CHARGER.get());
+        final ChargerBlockEntity original = helper.getBlockEntity(pos);
+        final var stack = card(id, noNode);
+        final var tag = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+        tag.putBoolean("oc_api_smoke_tablet", true); tag.putBoolean("oc_api_smoke_require_world", true);
+        tag.putBoolean("oc_api_smoke_dispose_increment", true);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        helper.assertTrue(original.canPlaceItem(0, stack), "Charger rejected actual addon tablet");
+        original.setItem(0, stack); initialized(helper, id);
+        final String address = (String) observe(id).get("address");
+        helper.assertTrue(noNode || !address.isEmpty(), "Charger addon has no live node identity");
+        invoke("setTrackedValue", new Class<?>[]{String.class, int.class}, id, 731);
+        final ChargerBlockEntity[] active = {original};
+        helper.startSequence().thenIdle(3).thenExecute(() -> {
+            helper.assertTrue(Boolean.TRUE.equals(observe(id).get("updated")), "Charger addon did not update without charging power");
+            final var removed = original.removeItem(0, 1); disposed(helper, id);
+            helper.assertTrue(ItemDriverData.dataTag(removed).getInt("trackedValue") == 732, "Charger item transfer lost disposal changes");
+            original.setItem(0, removed); initialized(helper, id);
+            helper.assertTrue(((Number) observe(id).get("value")).intValue() == 732, "Reinserted charger addon lost its value");
+            invoke("setTrackedValue", new Class<?>[]{String.class, int.class}, id, 733);
+            original.onChunkUnloaded(); disposed(helper, id);
+            final var saved = original.saveWithFullMetadata(helper.getLevel().registryAccess());
+            original.setRemoved(); disposed(helper, id);
+            active[0] = (ChargerBlockEntity) BlockEntity.loadStatic(original.getBlockPos(), original.getBlockState(), saved, helper.getLevel().registryAccess());
+            helper.getLevel().setBlockEntity(active[0]); active[0].onLoad(); initialized(helper, id);
+            helper.assertTrue(((Number) observe(id).get("value")).intValue() == 733, "Charger unload lost unsaved live addon value or published disposal changes");
+            helper.assertTrue(observe(id).get("address").equals(address), "Charger reload changed addon node identity");
+        }).thenIdle(3).thenExecute(() -> {
+            helper.assertTrue(Boolean.TRUE.equals(observe(id).get("updated")), "Restored charger addon did not update");
+            active[0].clearContent(); disposed(helper, id);
+        }).thenSucceed();
+    }
+
+    private static void chargerBreak(GameTestHelper helper, boolean noNode) {
+        final String id = "charger-break-" + noNode;
+        final var pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.CHARGER.get());
+        final ChargerBlockEntity charger = helper.getBlockEntity(pos);
+        final var stack = card(id, noNode);
+        final var tag = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+        tag.putBoolean("oc_api_smoke_tablet", true); tag.putBoolean("oc_api_smoke_dispose_increment", true);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        helper.assertTrue(charger.canPlaceItem(0, stack), "Charger break fixture rejected addon tablet");
+        charger.setItem(0, stack); initialized(helper, id);
+        invoke("setTrackedValue", new Class<?>[]{String.class, int.class}, id, 731);
+        helper.assertTrue(helper.getLevel().destroyBlock(helper.absolutePos(pos), true), "Charger block was not destroyed");
+        disposed(helper, id);
+        final var drops = helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(helper.absolutePos(pos)).inflate(2),
+            item -> item.getItem().is(Items.PAPER) && item.getItem().get(DataComponents.CUSTOM_DATA) != null
+                && item.getItem().get(DataComponents.CUSTOM_DATA).copyTag().getString("oc_api_smoke_lifecycle_id").equals(id));
+        helper.assertTrue(drops.size() == 1 && drops.getFirst().getItem().getCount() == 1, "Broken charger did not drop exactly one addon tablet");
+        helper.assertTrue(ItemDriverData.dataTag(drops.getFirst().getItem()).getInt("trackedValue") == 732,
+            "Broken charger dropped its pre-disposal addon state");
+        drops.forEach(ItemEntity::discard);
+        helper.succeed();
     }
 
     @SuppressWarnings("unchecked") private static Map<String,Object> observe(String id) { return (Map<String,Object>)invoke("observe",new Class<?>[]{String.class},id); }

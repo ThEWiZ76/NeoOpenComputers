@@ -88,3 +88,7 @@ Run the two commands below sequentially with a fresh world name; wait for prepar
 rtk proxy cmd /d /c gradlew.bat --no-daemon runGameTestServer '-Pneoopencomputers.restartNativeHosts' '-Pneoopencomputers.restartPhase=prepare' '-Pneoopencomputers.restartWorld=oc-restart-native-hosts-example-01'
 rtk proxy cmd /d /c gradlew.bat --no-daemon runGameTestServer '-Pneoopencomputers.restartNativeHosts' '-Pneoopencomputers.restartPhase=verify' '-Pneoopencomputers.restartWorld=oc-restart-native-hosts-example-01'
 ```
+
+## Charger addon lifecycle and persistence - 2026-10-21
+
+Charger actual addon node/no-node lifetime, update-without-power, loaded-server-world factory timing, transfer versus live unload snapshot, stable node identity, idempotent teardown and actual block-break/drop state verified. Initial lifecycle red2; first897 green; stronger actual break red2; final2241 units/918 tests per distinct-JVM phase, mixed994/absent859 all terminal exit0. Native Lua5.3/5.4 cases call restored external charger addon through the retained proxy. Detailed boundaries/evidence: [[../03 manuals/API addon runtime]]. Latest source server-only; installed/client-tested runtime still7f3e8b89b. Real built-in charger filesystem/open-handle JVM acceptance and wider port gates remain open. Beta3-6 concentrated workweeks, low confidence.
