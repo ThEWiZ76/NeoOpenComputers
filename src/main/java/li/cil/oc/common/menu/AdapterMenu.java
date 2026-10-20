@@ -55,6 +55,7 @@ public class AdapterMenu extends AbstractContainerMenu {
         ItemStack moved = ItemStack.EMPTY;
         final Slot slot = slots.get(index);
         if (slot != null && slot.hasItem()) {
+            li.cil.oc.common.inventory.ComponentInventory.saveBeforeTransfer(slot);
             final ItemStack stack = slot.getItem();
             moved = stack.copy();
             if (index < ADAPTER_SLOT_COUNT) {

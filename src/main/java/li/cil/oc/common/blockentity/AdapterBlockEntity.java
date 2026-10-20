@@ -20,6 +20,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.Connection;
@@ -34,6 +35,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,7 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
-public class AdapterBlockEntity extends BlockEntity implements Adapter, EnvironmentHost, Analyzable, DeviceInfo, MenuProvider {
+public class AdapterBlockEntity extends BlockEntity implements Adapter, EnvironmentHost, li.cil.oc.common.inventory.ComponentInventory, Analyzable, DeviceInfo, MenuProvider {
     private static final String TAG_NODE = "node";
     private static final String TAG_BLOCKS = "oc:adapter.blocks";
     private static final String TAG_ITEMS = "oc:items";
@@ -70,6 +72,8 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     private final boolean[] waitingForChunk = new boolean[SIDE_COUNT];
     private ManagedEnvironment itemEnvironment;
     private DriverItem itemDriver;
+    private ItemStack itemEnvironmentStack = ItemStack.EMPTY;
+    // Legacy host-level data belongs only to the inventory loaded alongside it.
     private CompoundTag itemEnvironmentData;
 
     public AdapterBlockEntity(final BlockPos pos, final BlockState blockState) {
@@ -143,10 +147,24 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     }
 
     @Override
+    public void saveItemData(final int slot) {
+        if (slot != UPGRADE_SLOT || itemEnvironment == null || itemDriver == null || itemEnvironmentStack.isEmpty()) return;
+        final CompoundTag data = new CompoundTag();
+        itemEnvironment.save(data);
+        final CompoundTag target = itemDriver.dataTag(itemEnvironmentStack);
+        for (String key : java.util.Set.copyOf(target.getAllKeys())) target.remove(key);
+        target.merge(data);
+        final CustomData customData = itemEnvironmentStack.get(DataComponents.CUSTOM_DATA);
+        if (customData != null) itemEnvironmentStack.set(DataComponents.CUSTOM_DATA, CustomData.of(customData.copyTag()));
+    }
+
+    @Override
     public ItemStack removeItem(final int slot, final int amount) {
         if (slot != UPGRADE_SLOT) {
             return ItemStack.EMPTY;
         }
+        saveItemData(slot);
+        itemEnvironmentData = null;
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
             refreshItemEnvironment();
@@ -160,6 +178,8 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         if (slot != UPGRADE_SLOT) {
             return ItemStack.EMPTY;
         }
+        saveItemData(slot);
+        itemEnvironmentData = null;
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             refreshItemEnvironment();
@@ -172,6 +192,8 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         if (slot != UPGRADE_SLOT) {
             return;
         }
+        saveItemData(slot);
+        itemEnvironmentData = null;
         final ItemStack stored = stack.copy();
         if (!stored.isEmpty() && stored.getCount() > getMaxStackSize()) {
             stored.setCount(getMaxStackSize());
@@ -199,6 +221,8 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
 
     @Override
     public void clearContent() {
+        saveItemData(UPGRADE_SLOT);
+        itemEnvironmentData = null;
         items.set(UPGRADE_SLOT, ItemStack.EMPTY);
         refreshItemEnvironment();
         setChanged();
@@ -237,6 +261,8 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     @Override
     protected void loadAdditional(final CompoundTag nbt, final HolderLookup.Provider registries) {
         super.loadAdditional(nbt, registries);
+        removeItemEnvironment();
+        itemEnvironmentData = null;
         if (nbt.contains(TAG_NODE)) {
             node().load(nbt.getCompound(TAG_NODE));
         }
@@ -266,8 +292,8 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     protected void saveAdditional(final CompoundTag nbt, final HolderLookup.Provider registries) {
         super.saveAdditional(nbt, registries);
         saveNode(nbt);
-        saveItems(nbt, registries);
         saveItemEnvironment(nbt);
+        saveItems(nbt, registries);
         saveBlockEnvironments(nbt);
         nbt.putByte(TAG_OPEN_SIDES, compressSides());
     }
@@ -294,6 +320,15 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     @Override
     public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
         handleUpdateTag(packet.getTag(), registries);
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) {
+            refreshItemEnvironment();
+            Network.joinOrCreateNetwork(this);
+        }
     }
 
     @Override
@@ -373,9 +408,10 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     }
 
     private void refreshItemEnvironment() {
+        if (level == null || level.isClientSide) return;
         final ItemStack stack = items.get(UPGRADE_SLOT);
         final DriverItem driver = stack.isEmpty() ? null : Driver.driverFor(stack, getClass());
-        if (itemEnvironment != null && itemDriver == driver) {
+        if (itemEnvironment != null && itemDriver == driver && itemEnvironmentStack == stack) {
             if (node().network() != null && itemEnvironment.node() != null && itemEnvironment.node().network() != node().network()) {
                 node().connect(itemEnvironment.node());
             }
@@ -393,26 +429,29 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         }
         if (itemEnvironmentData != null) {
             environment.load(itemEnvironmentData);
+            itemEnvironmentData = null;
         }
         itemEnvironment = environment;
         itemDriver = driver;
+        itemEnvironmentStack = stack;
+        saveItemData(UPGRADE_SLOT);
         if (node().network() != null) {
             node().connect(environment.node());
         }
     }
 
     private void removeItemEnvironment() {
-        if (itemEnvironment != null) {
-            final CompoundTag data = itemEnvironmentData != null ? itemEnvironmentData : new CompoundTag();
-            itemEnvironment.save(data);
-            itemEnvironmentData = data;
-            if (itemEnvironment.node() != null) {
-                node().disconnect(itemEnvironment.node());
-                itemEnvironment.node().remove();
-            }
-        }
+        saveItemData(UPGRADE_SLOT);
+        final ManagedEnvironment previous = itemEnvironment;
         itemEnvironment = null;
         itemDriver = null;
+        itemEnvironmentStack = ItemStack.EMPTY;
+        if (previous != null) {
+            if (previous.node() != null) {
+                node().disconnect(previous.node());
+                previous.node().remove();
+            }
+        }
     }
 
     private void refreshSide(final Direction direction) {
@@ -505,12 +544,10 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
 
     private void saveItemEnvironment(final CompoundTag nbt) {
         if (itemEnvironment != null) {
-            final CompoundTag data = itemEnvironmentData != null ? itemEnvironmentData : new CompoundTag();
-            itemEnvironment.save(data);
-            itemEnvironmentData = data;
-        }
-        if (itemEnvironmentData != null) {
-            nbt.put(TAG_ITEM_COMPONENT, itemEnvironmentData);
+            saveItemData(UPGRADE_SLOT);
+            nbt.put(TAG_ITEM_COMPONENT, itemDriver.dataTag(itemEnvironmentStack).copy());
+        } else if (itemEnvironmentData != null) {
+            nbt.put(TAG_ITEM_COMPONENT, itemEnvironmentData.copy());
         }
     }
 
