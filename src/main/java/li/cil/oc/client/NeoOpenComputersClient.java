@@ -280,7 +280,9 @@ public final class NeoOpenComputersClient {
             minecraft.player.canUseGameMasterBlocks() && minecraft.options.operatorItemsTab().get(), minecraft.level.registryAccess());
         ModCreativeTabs.MAIN.get().buildContents(parameters);
         CreativeModeTabs.searchTab().buildContents(parameters);
-        connection.updateSearchTrees();
+        final var searchItems = java.util.List.copyOf(CreativeModeTabs.searchTab().getDisplayItems());
+        connection.searchTrees().updateCreativeTooltips(minecraft.level.registryAccess(), searchItems);
+        connection.searchTrees().updateCreativeTags(searchItems);
     }
 
     @SubscribeEvent
