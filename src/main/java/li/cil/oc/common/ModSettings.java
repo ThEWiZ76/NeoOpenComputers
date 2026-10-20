@@ -54,6 +54,7 @@ public final class ModSettings {
     public static final ModConfigSpec.DoubleValue TRADING_RANGE;
     public static final ModConfigSpec.BooleanValue INPUT_USERNAME;
     public static final ModConfigSpec.BooleanValue LOOT_RECRAFTING;
+    public static final ModConfigSpec.IntValue LOOT_PROBABILITY;
     public static final ModConfigSpec.BooleanValue CAN_COMPUTERS_BE_OWNED;
     public static final ModConfigSpec.IntValue MAX_USERS;
     public static final ModConfigSpec.IntValue MAX_USERNAME_LENGTH;
@@ -237,6 +238,9 @@ public final class ModSettings {
     static {
         final ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("misc");
+        LOOT_PROBABILITY = builder
+            .comment("Loot disk entry weight in dungeon, desert pyramid, jungle temple and stronghold library chests. Not a percentage. Zero disables injection; changes apply on server resource reload. Upstream default is 5.")
+            .defineInRange("lootProbability", 5, 0, 10_000);
         LOOT_RECRAFTING = builder
             .comment("Allow loot disks to be cycled with a wrench. Applies when server recipes load or reload. OpenComputers upstream default is true.")
             .define("lootRecrafting", true);

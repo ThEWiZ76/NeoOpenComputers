@@ -76,6 +76,7 @@ public final class NeoOpenComputers {
         ModItems.register(modEventBus);
         ModMenus.register(modEventBus);
         ModRecipeSerializers.register(modEventBus);
+        li.cil.oc.common.ChestLoot.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
         ModSounds.register(modEventBus);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModSettings.SPEC);
