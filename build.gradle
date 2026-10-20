@@ -116,6 +116,9 @@ runs {
         argument '--nogui'
     }
     gameTestServer {
+        if (project.hasProperty('withAE2')) {
+            systemProperty 'neoopencomputers.testAE2', 'true'
+        }
         if (project.hasProperty('withEnderStorage')) {
             systemProperty 'neoopencomputers.testEnderStorage', 'true'
         }
@@ -182,6 +185,8 @@ tasks.named('generateEmptyGameTestStructure') {
     mustRunAfter tasks.named('syncGameTestStructures')
 }
 configurations {
+    appliedEnergisticsRuntime
+    runtimeClasspath.extendsFrom appliedEnergisticsRuntime
     nativeLuaArtifacts
     projectRedRuntime
     runtimeClasspath.extendsFrom projectRedRuntime
@@ -192,6 +197,10 @@ configurations {
 }
 
 dependencies {
+    compileOnly 'org.appliedenergistics:appliedenergistics2:19.2.18:api'
+    if (project.hasProperty('withAE2')) {
+        appliedEnergisticsRuntime 'org.appliedenergistics:appliedenergistics2:19.2.18'
+    }
     compileOnly 'io.codechicken:EnderStorage:1.21.1-2.13.0.191'
     compileOnly 'io.codechicken:CodeChickenLib:1.21.1-4.6.1.529'
     if (project.hasProperty('withEnderStorage')) {

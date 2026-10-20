@@ -40,6 +40,13 @@ config="${mod_id}.mixins.json"
     side="BOTH"
 
 [[dependencies.${mod_id}]]
+    modId="ae2"
+    type="optional"
+    versionRange="[19.2.18,20)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
     modId="enderstorage"
     type="optional"
     versionRange="[2.13.0.191,2.14)"
