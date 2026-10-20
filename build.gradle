@@ -116,6 +116,9 @@ runs {
         argument '--nogui'
     }
     gameTestServer {
+        if (project.hasProperty('withEnderStorage')) {
+            systemProperty 'neoopencomputers.testEnderStorage', 'true'
+        }
         if (project.hasProperty('withProjectRed') || project.hasProperty('withProjectRedCore')) {
             systemProperty 'neoopencomputers.testProjectRedCore', 'true'
         }
@@ -184,9 +187,17 @@ configurations {
     runtimeClasspath.extendsFrom projectRedRuntime
     computerCraftRuntime
     runtimeClasspath.extendsFrom computerCraftRuntime
+    enderStorageRuntime
+    runtimeClasspath.extendsFrom enderStorageRuntime
 }
 
 dependencies {
+    compileOnly 'io.codechicken:EnderStorage:1.21.1-2.13.0.191'
+    compileOnly 'io.codechicken:CodeChickenLib:1.21.1-4.6.1.529'
+    if (project.hasProperty('withEnderStorage')) {
+        enderStorageRuntime 'io.codechicken:EnderStorage:1.21.1-2.13.0.191'
+        enderStorageRuntime 'io.codechicken:CodeChickenLib:1.21.1-4.6.1.529'
+    }
     compileOnly 'mrtjp:ProjectRed:1.21.1-4.23.0:api'
     if (project.hasProperty('withProjectRed') || project.hasProperty('withProjectRedCore')) {
         projectRedRuntime 'mrtjp:ProjectRed:1.21.1-4.23.0:core'
