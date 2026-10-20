@@ -58,7 +58,7 @@ final class DocumentationCategory implements IRecipeCategory<DocumentationCatego
             final var minecraft = Minecraft.getInstance();
             if (minecraft.player == null) return;
             minecraft.player.closeContainer();
-            Manual.openFor(minecraft.player); Manual.navigate(page.path());
+            Manual.navigate(page.path()); Manual.openFor(minecraft.player);
         }));
     }
 
