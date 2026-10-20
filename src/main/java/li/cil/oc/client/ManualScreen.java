@@ -236,11 +236,10 @@ public class ManualScreen extends Screen {
         if (textPixelWidth(segment, text, textWidth) <= availableWidth) {
             return text;
         }
-        final int firstWhitespace = firstWhitespace(text);
-        final String firstWord = firstWhitespace < 0 ? text : text.substring(0, firstWhitespace);
+        final String firstWord = text.substring(0, firstWordEnd(text));
         if (!firstWord.isEmpty()
             && textPixelWidth(segment, firstWord, textWidth) > availableWidth
-            && textPixelWidth(segment, firstWord, textWidth) <= maxWidth) {
+            && textPixelWidth(segment, shouldStripLeading(segment) ? firstWord.stripLeading() : firstWord, textWidth) <= maxWidth) {
             return "";
         }
         int bestLength = 0;
@@ -274,13 +273,15 @@ public class ManualScreen extends Screen {
         };
     }
 
-    private static int firstWhitespace(final String text) {
-        for (int index = 0; index < text.length(); index++) {
-            if (Character.isWhitespace(text.charAt(index))) {
-                return index;
-            }
+    private static int firstWordEnd(final String text) {
+        int index = 0;
+        while (index < text.length() && Character.isWhitespace(text.charAt(index))) {
+            index++;
         }
-        return -1;
+        while (index < text.length() && !Character.isWhitespace(text.charAt(index))) {
+            index++;
+        }
+        return index;
     }
 
     private static int textPixelWidth(final ManualDocument.Segment segment, final ToIntFunction<String> textWidth) {

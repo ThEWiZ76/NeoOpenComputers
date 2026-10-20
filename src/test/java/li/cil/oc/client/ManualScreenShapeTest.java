@@ -207,6 +207,20 @@ final class ManualScreenShapeTest {
     }
 
     @Test
+    void manualScreenKeepsWordsWholeAfterInlineLinks() {
+        for (final var source : List.of("[1234567](item/manual.md) which fits", "[abc](item/manual.md) gamma")) {
+            final boolean narrow = source.contains("gamma");
+            final var document = ManualDocument.parse(List.of(source), href -> null);
+            final var entries = ManualScreen.layout(document, narrow ? 30 : 60, text -> text.length() * 6);
+
+            assertEquals(2, entries.size(), "Leading separator split the next word after a link");
+            assertTextEntry(narrow ? "gamma" : "which fits", entries.get(1));
+            assertEquals(0, entries.get(1).x());
+            assertEquals(ManualScreen.LINE_HEIGHT, entries.get(1).y());
+        }
+    }
+
+    @Test
     void manualScreenWrapsTextUsingMeasuredWidth() {
         ManualDocument document = ManualDocument.parse(List.of("alpha beta"), href -> null);
 
