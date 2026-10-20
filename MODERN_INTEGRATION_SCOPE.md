@@ -7,7 +7,7 @@ Baseline7d9eac5584e238a890a388a0f697c27c7391caa4 contains171 integration source 
 | Source group | Files | Declared callbacks | Current decision / remaining work |
 | --- | ---: | ---: | --- |
 | (root metadata) | 4 | 0 | Bootstrap/mod-proxy metadata, not a mod family; modern activation/blacklist parity still to audit. |
-| appeng | 12 | 27 | Modern AE2 verified available; API/crafting/storage/interface/import-export integration still open. Next implementation priority. |
+| appeng | 12 | 27 | Controller11 network/storage/CPU/energy callbacks implemented at5b60fee0b with real server/native and mixed/standalone/absence proof. Crafting userdata/persistence, interfaces/buses/converters/auxiliary hooks and client acceptance still open. See AE2_CONTROLLER_INTEGRATION.md and AE2_INTEGRATION_PLAN.md. |
 | charset | 1 | 0 | Bundled-redstone bridge. Modern provider/version or explicit replacement decision still unverified. |
 | cofh | 7 | 15 | Energy/redstone/security/steam and item-charge APIs. Modern CoFH/Thermal equivalents still to verify; generic FE is not all these callbacks. |
 | computercraft | 9 | 0 | Bundled transport already tested. Peripheral/media/Lua-object/relay-specific contracts still need comparison; zero annotated callbacks does not mean no integration API. |

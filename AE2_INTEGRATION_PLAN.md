@@ -14,13 +14,13 @@ Baseline: upstream master-MC1.12 7d9eac5584e238a890a388a0f697c27c7391caa4, integ
 
 Files: build.gradle; src/main/resources/META-INF/neoforge.mods.toml; src/main/java/li/cil/oc/common/ModDriverCatalog.java; new common/integration/AppliedEnergisticsIntegration.java and common/gametest/AppliedEnergisticsGameTests.java.
 
-- [ ] Pin optional API compile dependency and opt-in `-PwithAE2` runtime/test profile; no external classes bundled.
-- [ ] Write a real controller/drive/cell fixture and native Lua physical-adapter discovery test. Run before implementation, save missing-driver evidence.
-- [ ] Register controller driver, component me_controller, NamedBlock priority5. Guard removed/unloaded/replaced tile; obtain current node/grid each call.
-- [ ] Implement getCpus and seven energy callbacks. Consume1.5 budget for getEnergyDemand. Compare moving quantities only in a single server-thread snapshot.
-- [ ] Implement getItemsInNetwork with stored/craftable-only union, long quantities, accurate converted descriptors and recursive subset filters. Implement getFluidsInNetwork with AE2 fluid-unit conversion verified from API source.
-- [ ] Implement store optional filter/address/start/count, reachable-database lookup, one-based bounded slots and skipping occupied slots; never extract or give physical ownership. Test full database, invalid bounds/address, occupied entries and unchanged network contents.
-- [ ] Verify build/units and real powered-grid item/fluid/CPU/energy contracts, native Lua; standalone, mixed-mod and no-AE2 profiles. Save logs; commit/push completed step.
+- [x] Pin optional API compile dependency and opt-in `-PwithAE2` runtime/test profile; no external classes bundled.
+- [x] Write a real controller/drive/cell fixture and native Lua physical-adapter discovery test. Run before implementation, save missing-driver evidence.
+- [x] Register controller driver, component me_controller, NamedBlock priority5. Guard removed/unloaded/replaced tile; obtain current node/grid each call.
+- [x] Implement getCpus and seven energy callbacks. Consume1.5 budget for getEnergyDemand. Compare moving quantities only in a single server-thread snapshot.
+- [x] Implement getItemsInNetwork with stored/craftable-only union, long quantities, accurate converted descriptors and recursive subset filters. Implement getFluidsInNetwork with AE2 fluid-unit conversion verified from API source.
+- [x] Implement store optional filter/address/start/count, reachable-database lookup, one-based bounded slots and skipping occupied slots; never extract or give physical ownership. Test full database, invalid bounds/address, occupied entries and unchanged network contents.
+- [x] Verify build/units and real powered-grid item/fluid/CPU/energy contracts, native Lua; standalone, mixed-mod and no-AE2 profiles. Save logs; commit/push completed step.
 
 ## 2. Crafting userdata and lifecycle
 
@@ -59,3 +59,5 @@ Files: integration/ae2 converter, tool/spatial integration registration, Environ
 - [ ] Update complete port plan, parity/gap/scope register and manual canonically first; mirror repository docs; commit/push and verify remote SHA equals local.
 
 Beta estimate remains3-6 concentrated workweeks, low confidence; this is the whole port estimate, not AE2 alone. Re-estimate after crafting/persistence and remaining integration discovery. No step above is complete merely because callback names exist or unrelated tests pass.
+
+Controller checkpoint 5b60fee0b7577cd2a95c831969903a9237e695eb: first work package verified with2140 units,730 mixed/728 standalone/726 absent server tests. Craftable-key union exists; positive recipe output and userdata acceptance stays in task2. See [[../03 manuals/AE2 controller integration]].
