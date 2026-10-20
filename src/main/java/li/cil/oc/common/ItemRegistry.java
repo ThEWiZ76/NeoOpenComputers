@@ -65,6 +65,16 @@ public final class ItemRegistry implements ItemAPI {
             .orElse(null);
     }
 
+    /** Physical item aliases in registration order, without evaluating configured stack suppliers. */
+    public List<ItemInfo> aliasesFor(final ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return List.of();
+        }
+        return infosByName.values().stream()
+            .filter(info -> info instanceof RegisteredItemInfo && info.item() == stack.getItem())
+            .toList();
+    }
+
     @Override
     public ItemStack registerFloppy(final String name, final DyeColor color, final Callable<li.cil.oc.api.fs.FileSystem> factory, final boolean doRecipeCycling) {
         return registerFloppy(name, color, net.neoforged.fml.ModLoadingContext.get().getActiveNamespace() + ":" + name, factory, doRecipeCycling);
