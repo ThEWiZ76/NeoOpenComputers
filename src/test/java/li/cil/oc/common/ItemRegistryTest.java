@@ -97,6 +97,17 @@ final class ItemRegistryTest {
     }
 
     @Test
+    void publicFloppyRegistrationUsesStableFallbackNamespace() {
+        final Callable<FileSystem> factory = () -> null;
+        final ItemRegistry first = new ItemRegistry();
+        final ItemRegistry second = new ItemRegistry();
+        first.registerFloppy("fixture", DyeColor.BLUE, factory, false);
+        second.registerFloppy("fixture", DyeColor.RED, factory, true);
+        assertSame(factory, first.floppyFactory("minecraft:fixture"));
+        assertSame(factory, second.floppyFactory("minecraft:fixture"));
+    }
+
+    @Test
     void eepromFactoryDataStoresConfiguredCodeDataAndReadonlyFlag() {
         CompoundTag data = ItemRegistry.createEepromData("bios", new byte[]{1, 2}, new byte[]{3}, true);
 

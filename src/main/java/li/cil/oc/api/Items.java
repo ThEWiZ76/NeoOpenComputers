@@ -21,6 +21,11 @@ public final class Items {
         return null;
     }
 
+    /**
+     * Registers a factory-backed disk using the active mod namespace and name as its persistent identity.
+     * Call from the owning mod's loading context with a stable name unique within that mod.
+     * Register the same name on every startup so existing disks can resolve their factory.
+     */
     public static ItemStack registerFloppy(final String name, final DyeColor color, final Callable<li.cil.oc.api.fs.FileSystem> factory, final boolean doRecipeCycling) {
         if (API.items != null) {
             return API.items.registerFloppy(name, color, factory, doRecipeCycling);

@@ -17,7 +17,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
@@ -68,7 +67,7 @@ public final class ItemRegistry implements ItemAPI {
 
     @Override
     public ItemStack registerFloppy(final String name, final DyeColor color, final Callable<li.cil.oc.api.fs.FileSystem> factory, final boolean doRecipeCycling) {
-        return registerFloppy(name, color, UUID.randomUUID().toString(), factory, doRecipeCycling);
+        return registerFloppy(name, color, net.neoforged.fml.ModLoadingContext.get().getActiveNamespace() + ":" + name, factory, doRecipeCycling);
     }
 
     ItemStack registerFloppy(final String name, final DyeColor color, final String factoryId, final Callable<li.cil.oc.api.fs.FileSystem> factory, final boolean doRecipeCycling) {

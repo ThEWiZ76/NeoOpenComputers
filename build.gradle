@@ -152,6 +152,12 @@ runs {
         }
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         systemProperty 'neoopencomputers.testFluidCapabilities', 'true'
+        if (project.hasProperty('neoopencomputers.restartAddonFloppy')) {
+            if (!project.hasProperty('neoopencomputers.restartPhase')) {
+                throw new GradleException('Addon floppy restart requires the isolated restart phase/world properties.')
+            }
+            systemProperty 'neoopencomputers.restartAddonFloppy', 'true'
+        }
         if (project.hasProperty('neoopencomputers.restartComputerCraftMedia')) {
             if (!project.hasProperty('neoopencomputers.restartPhase') || !project.hasProperty('withComputerCraft')) {
                 throw new GradleException('CC media restart requires withComputerCraft and the ordinary isolated restart phase/world properties.')
