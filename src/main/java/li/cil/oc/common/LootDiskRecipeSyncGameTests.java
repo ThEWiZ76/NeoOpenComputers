@@ -102,7 +102,7 @@ public final class LootDiskRecipeSyncGameTests {
         return CraftingInput.of(2, 1, List.of(disk, new ItemStack(ModItems.WRENCH.get())));
     }
 
-    private static LootDiskCyclingRecipe transfer(GameTestHelper helper, LootDiskCyclingRecipe recipe, ItemRegistry sending, ItemRegistry receiving) {
+    static LootDiskCyclingRecipe transfer(GameTestHelper helper, LootDiskCyclingRecipe recipe, ItemRegistry sending, ItemRegistry receiving) {
         final var buffer = new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), helper.getLevel().registryAccess());
         try {
             API.items = sending;

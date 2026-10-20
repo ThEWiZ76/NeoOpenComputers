@@ -83,7 +83,7 @@ public class FloppyItem extends Item implements DriverItem {
         }
         final CompoundTag rootData = rootData(stack);
         if (rootData.contains(LEGACY_LOOT_PATH_TAG)) {
-            return createReadOnlyEnvironment(() -> ModLootDisks.bundledFileSystem(rootData.getString(LEGACY_LOOT_PATH_TAG)), stack, rootData, host);
+            return createReadOnlyEnvironment(() -> ModLootDisks.legacyFileSystem(rootData.getString(LEGACY_LOOT_PATH_TAG)), stack, rootData, host);
         }
         if (rootData.contains(LEGACY_LOOT_FACTORY_TAG)) {
             if (!(API.items instanceof ItemRegistry registry)) {

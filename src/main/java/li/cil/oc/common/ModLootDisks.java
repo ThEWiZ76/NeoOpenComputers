@@ -43,6 +43,20 @@ public final class ModLootDisks {
         return API.fileSystem.fromClass(ModLootDisks.class, NeoOpenComputers.MODID, LOOT_ROOT + "/" + path);
     }
 
+    public static FileSystem legacyFileSystem(final String path) {
+        final var segments = lootPathSegments(path);
+        final var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
+        if (server != null) {
+            var directory = server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("opencomputers/loot");
+            for (final var segment : segments) directory = directory.resolve(segment);
+            if (java.nio.file.Files.isDirectory(directory)) {
+                if (API.fileSystem == null) OpenComputersApi.initialize();
+                return API.fileSystem.asReadOnly(API.fileSystem.fromSaveDirectory("loot/" + String.join("/", segments), 0, false));
+            }
+        }
+        return bundledFileSystem(path);
+    }
+
     public static List<ItemStack> bundledStacksForCycling() {
         final List<ItemStack> stacks = new ArrayList<>();
         for (Descriptor descriptor : bundledDescriptors()) {
@@ -79,14 +93,18 @@ public final class ModLootDisks {
         final List<Descriptor> descriptors = new ArrayList<>();
         for (String path : new TreeSet<>(properties.stringPropertyNames())) {
             try {
-                if (path.isEmpty() || java.nio.file.Path.of(path).isAbsolute() || path.startsWith("\\")) throw new IllegalArgumentException("loot path must be relative");
-                FileSystemRegistry.pathSegments(path);
+                lootPathSegments(path);
                 descriptors.add(parseDescriptor(path, properties.getProperty(path)));
             } catch (IllegalArgumentException failure) {
                 NeoOpenComputers.LOGGER.warn("Skipping invalid loot descriptor {}={}", path, properties.getProperty(path));
             }
         }
         return List.copyOf(descriptors);
+    }
+
+    private static String[] lootPathSegments(String path) {
+        if (path.isEmpty() || java.nio.file.Path.of(path).isAbsolute() || path.startsWith("\\")) throw new IllegalArgumentException("loot path must be relative");
+        return FileSystemRegistry.pathSegments(path);
     }
 
     static String factoryId(final String path) {

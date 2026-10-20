@@ -26,7 +26,8 @@ public final class WorldLootGameTests {
             new TestFunction("worldLoot", "world_loot_descriptors_reach_factories_recipes_and_metadata", "neoopencomputers:empty", 100, 0, true, WorldLootGameTests::definitions),
             new TestFunction("worldLoot", "world_loot_sampling_uses_descriptor_weights", "neoopencomputers:empty", 100, 0, true, WorldLootGameTests::sampling),
             new TestFunction("worldLoot", "world_loot_large_weights_and_copies", "neoopencomputers:empty", 100, 0, true, WorldLootGameTests::pool),
-            new TestFunction("worldLoot", "world_loot_unload_and_other_world_isolation", "neoopencomputers:empty", 100, 0, true, WorldLootGameTests::isolation));
+            new TestFunction("worldLoot", "world_loot_unload_and_other_world_isolation", "neoopencomputers:empty", 100, 0, true, WorldLootGameTests::isolation),
+            new TestFunction("worldLoot", "world_loot_legacy_path_prefers_world_files", "neoopencomputers:empty", 100, 0, true, WorldLootGameTests::legacy));
     }
 
     private static void definitions(GameTestHelper helper) {
@@ -104,8 +105,15 @@ public final class WorldLootGameTests {
                 helper.assertTrue(fs.getHandle(fs.open("probe.bin", Mode.Read)).read(data) == 1 && data[0] == 9, "Other-world factory read the active world's bytes");
             } finally { fs.close(); }
             helper.assertTrue(ModLootDisks.stacksForCycling().stream().anyMatch(stack -> stack.getHoverName().getString().equals("World fixture")), "Reading another world's descriptors changed the active world");
+            final var liveRecipe = new li.cil.oc.common.recipe.LootDiskCyclingRecipe(net.minecraft.world.item.crafting.CraftingBookCategory.MISC);
+            final var receivedRecipe = LootDiskRecipeSyncGameTests.transfer(helper, liveRecipe, owner, owner);
+            final var input = net.minecraft.world.item.crafting.CraftingInput.of(2, 1, List.of(ModLootDisks.bundledStacksForCycling().getLast(), new ItemStack(ModItems.WRENCH.get())));
+            final var expected = liveRecipe.assemble(input, helper.getLevel().registryAccess());
+            helper.assertTrue(expected.getHoverName().getString().equals("World fixture"), "World recipe fixture did not select the external output");
             WorldLootDisks.unload(server);
             helper.assertTrue(owner.floppyFactory(ModLootDisks.factoryId("addon")) == null && ModLootDisks.randomDisk(RandomSource.create(731)).isEmpty(), "Unloaded world factories or sampling state leaked");
+            helper.assertTrue(ItemStack.isSameItemSameComponents(expected, receivedRecipe.assemble(input, helper.getLevel().registryAccess())) &&
+                !ItemStack.isSameItemSameComponents(expected, liveRecipe.assemble(input, helper.getLevel().registryAccess())), "Actual recipe-update packet lost its world-authoritative output snapshot");
             final var bundled = owner.floppyFactory(ModLootDisks.factoryId("network")).call();
             try { helper.assertTrue(!bundled.exists("network-fixture.bin"), "World override permanently replaced the bundled factory"); }
             finally { bundled.close(); }
@@ -116,6 +124,24 @@ public final class WorldLootGameTests {
                 for (final var path : List.of(loot.resolve("addon/probe.bin"), loot.resolve("loot.properties"), loot.resolve("addon"), loot, other.resolve("opencomputers"), other)) Files.deleteIfExists(path);
             } catch (java.io.IOException failure) { helper.assertTrue(false, "Cannot clean owned world fixture: " + failure); }
         }
+        helper.succeed();
+    }
+
+    private static void legacy(GameTestHelper helper) {
+        final var stack = new ItemStack(ModItems.FLOPPY.get());
+        final var data = new net.minecraft.nbt.CompoundTag();
+        data.putString("oc:lootPath", "legacy-only");
+        data.putString("oc:fs.label", "Legacy world disk");
+        stack.set(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(data));
+        final var environment = li.cil.oc.api.Driver.driverFor(stack).createEnvironment(stack, null);
+        helper.assertTrue(environment != null && environment.node() instanceof li.cil.oc.api.network.Component, "Legacy path disk ignored its world directory when no bundled fallback exists");
+        final var component = (li.cil.oc.api.network.Component) environment.node();
+        try {
+            helper.assertTrue(Boolean.TRUE.equals(component.invoke("exists", null, "legacy-marker.bin")[0]), "Legacy disk opened the wrong files");
+            helper.assertTrue("Legacy world disk".equals(component.invoke("getLabel", null)[0]), "Legacy world disk label was lost");
+            helper.assertTrue(Boolean.TRUE.equals(component.invoke("isReadOnly", null)[0]), "Legacy loot disk exposes mutable world files");
+        } catch (Exception failure) { helper.assertTrue(false, "Legacy world filesystem callback failed: " + failure); }
+        finally { environment.node().remove(); }
         helper.succeed();
     }
 
