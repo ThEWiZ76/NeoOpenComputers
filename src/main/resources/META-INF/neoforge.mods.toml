@@ -54,6 +54,13 @@ config="${mod_id}.mixins.json"
     side="BOTH"
 
 [[dependencies.${mod_id}]]
+    modId="forestry"
+    type="optional"
+    versionRange="[3.0.0-alpha8,4)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
     modId="tis3d"
     type="optional"
     versionRange="[2.0.0,3)"

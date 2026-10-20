@@ -25,7 +25,11 @@ repositories {
     }
     maven {
         url = 'https://maven.blamejared.com/'
-        content { includeGroup 'mezz.jei' }
+        content { includeGroup 'mezz.jei'; includeGroup 'vazkii.patchouli' }
+    }
+    maven {
+        url = 'https://cursemaven.com'
+        content { includeGroup 'curse.maven' }
     }
     maven {
         url = 'https://modmaven.dev/'
@@ -154,6 +158,12 @@ runs {
         if (project.hasProperty('withTIS3D')) {
             systemProperty 'neoopencomputers.testTIS3D', 'true'
         }
+        if (project.hasProperty('withForestry') || project.hasProperty('withForestryButterflies')) {
+            systemProperty 'neoopencomputers.testForestry', 'true'
+        }
+        if (project.hasProperty('withForestryButterflies')) {
+            systemProperty 'neoopencomputers.testForestryButterflies', 'true'
+        }
         if (project.hasProperty('withProjectRed') || project.hasProperty('withProjectRedCore')) {
             systemProperty 'neoopencomputers.testProjectRedCore', 'true'
         }
@@ -278,9 +288,19 @@ configurations {
     runtimeClasspath.extendsFrom enderStorageRuntime
     tis3dRuntime
     runtimeClasspath.extendsFrom tis3dRuntime
+    forestryRuntime
+    runtimeClasspath.extendsFrom forestryRuntime
 }
 
 dependencies {
+    compileOnly 'curse.maven:forestry-community-edition-1056828:8782913'
+    if (project.hasProperty('withForestry') || project.hasProperty('withForestryButterflies')) {
+        forestryRuntime 'curse.maven:forestry-community-edition-1056828:8782913'
+        forestryRuntime 'vazkii.patchouli:Patchouli:1.21.1-93-NEOFORGE'
+    }
+    if (project.hasProperty('withForestryButterflies')) {
+        forestryRuntime 'curse.maven:forestry-ce-butterflies-1659042:8782922'
+    }
     compileOnly 'maven.modrinth:tis3d:MC1.21.1-neoforge-2.0.0'
     compileOnly 'maven.modrinth:markdownmanual:MC1.21.1-neoforge-1.2.8'
     compileOnly 'maven.modrinth:architectury-api:13.0.11+neoforge'
