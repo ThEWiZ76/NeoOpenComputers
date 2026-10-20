@@ -18,12 +18,20 @@ public class WrenchItem extends Item implements li.cil.oc.api.internal.Wrench {
     }
 
     @Override
+    public InteractionResult onItemUseFirst(final ItemStack stack, final UseOnContext context) {
+        return useOn(context);
+    }
+
+    @Override
     public InteractionResult useOn(final UseOnContext context) {
         final Level level = context.getLevel();
+        final Player player = context.getPlayer();
+        if (player != null && !level.mayInteract(player, context.getClickedPos())) {
+            return InteractionResult.PASS;
+        }
         if (!rotateBlock(level, context.getClickedPos(), level.isClientSide())) {
             return InteractionResult.PASS;
         }
-        final Player player = context.getPlayer();
         if (player != null && !level.isClientSide()) {
             player.swing(context.getHand());
         }

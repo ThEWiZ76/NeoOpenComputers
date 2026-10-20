@@ -60,12 +60,15 @@ public final class RaidFacingGameTests {
         final var handle = RaidStorageGameTests.write(helper, hardware); final var fs = RaidStorageGameTests.filesystem(helper, hardware.raid());
         final var player = helper.makeMockServerPlayerInLevel(); final var pos = hardware.raid().getBlockPos();
         try {
+            player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
+            player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() - 1.5);
             final var initial = hardware.raid().getBlockState(); helper.assertTrue(initial.hasProperty(HorizontalDirectionalBlock.FACING), "RAID cannot be rotated by a wrench");
             player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.WRENCH.get()));
             final var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false);
             for (int step = 0; step < 4; step++) {
                 final var before = helper.getLevel().getBlockState(pos).getValue(HorizontalDirectionalBlock.FACING);
-                helper.assertTrue(player.getMainHandItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit)).consumesAction(), "Real wrench item did not rotate RAID");
+                helper.assertTrue(player.gameMode.useItemOn(player, helper.getLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND, hit).consumesAction(), "Player wrench interaction did not rotate RAID");
+                helper.assertTrue(player.containerMenu == player.inventoryMenu, "Wrench rotation opened the RAID menu");
                 helper.assertTrue(helper.getLevel().getBlockState(pos).getValue(HorizontalDirectionalBlock.FACING) == before.getClockWise()
                     && helper.getLevel().getBlockEntity(pos) == hardware.raid() && RaidStorageGameTests.filesystem(helper, hardware.raid()) == fs
                     && hardware.raid().diskCount() == 3, "Wrench rotation replaced the RAID host, disks or live filesystem");
@@ -74,6 +77,21 @@ public final class RaidFacingGameTests {
             helper.assertTrue(java.util.Arrays.equals((byte[]) fs.invoke("read", hardware.computer().machine(), handle, 3)[0], new byte[]{(byte) 128, (byte) 255, 42}), "Wrench rotation closed or reset an open RAID file");
             fs.invoke("close", hardware.computer().machine(), handle); hardware.raid().clearContent();
         } finally { helper.getLevel().getServer().getPlayerList().remove(player); }
+        helper.succeed();
+    }
+    @GameTest(template = "ae2_export")
+    public static void wrenchAllowsNonRotatableBlockInteraction(GameTestHelper helper) {
+        final var player = helper.makeMockServerPlayerInLevel();
+        final var pos = helper.absolutePos(new BlockPos(3, 2, 3));
+        try {
+            player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
+            player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() - 1.5);
+            helper.getLevel().setBlockAndUpdate(pos, Blocks.CRAFTING_TABLE.defaultBlockState());
+            player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.WRENCH.get()));
+            final var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.NORTH, pos, false);
+            helper.assertTrue(player.gameMode.useItemOn(player, helper.getLevel(), player.getMainHandItem(), InteractionHand.MAIN_HAND, hit).consumesAction(), "Wrench swallowed nonrotatable block interaction");
+            helper.assertTrue(player.containerMenu instanceof net.minecraft.world.inventory.CraftingMenu, "Wrench prevented crafting table menu");
+        } finally { player.closeContainer(); helper.getLevel().getServer().getPlayerList().remove(player); }
         helper.succeed();
     }
     @GameTest(template = "ae2_export")
