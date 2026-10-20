@@ -22,6 +22,20 @@ LootDiskPool stores weighted entries with a long total rather than expanding one
 
 The port previously looked only in bundled resources. It now checks an existing world loot directory first and otherwise retains bundled fallback, including existing OpenOS compatibility. It preserves the legacy filesystem label and exposes world loot content read-only. Upstream DriverLootDisk had a writable filesystem type constrained indirectly by zero capacity; the port deliberately uses an explicit read-only wrapper so a write-open cannot truncate world content. Invalid legacy paths fail without escaping the content root. No old files are moved or rewritten.
 
+## Actual treasure-chest generation — e4bf5dceb9466e71b58591baebd180d8d5af8ac0
+
+ChestLoot registers the serializable neoopencomputers:loot_disk singleton entry. Its selected output comes from the active world sampler, retaining each disk's factory, label and color. misc.lootProbability is an entry weight, default5, range0..10000; zero disables injection on the next server resource reload. It is not a percentage. Generated/opened chest inventories are not retroactively changed.
+
+The four targets are minecraft:chests/simple_dungeon, desert_pyramid, jungle_temple and stronghold_library. NeoForge's load event injects exactly one entry into the pool containing iron_ingot, or book for the library, recursively checking composite children. Current vanilla dungeon uses its second pool; the other three use the first. A datapack without those anchors uses its first existing pool; an entirely pool-free table remains empty. Existing direct/composite disk entries prevent duplicate injection. Datapacks may explicitly use the registered entry with standard weight/quality/condition/function fields.
+
+Targeted mixin accessors preserve the existing table and pool identities, order, registry holders, names, conditions, functions, entries, roll counts and random sequences. The only replacement is the selected pool's entry list, before table/pool freezing. A post-generation additive GLM would not preserve weighted competition with original entries. The first whole-table-codec approach failed during real startup because unresolved enchantment tag owners cannot be re-encoded in that load context; it was removed. No reflection or wholesale vanilla JSON replacement is used.
+
+Evidence: chest-loot-red logs reproduce two required failures (no weighted entry and no chest disks). Final build/all2203 units/all911 mixed and all826 absent GameTests pass with complete summaries and normal process exits. Final logs are chest-loot-final-mixed-02 and chest-loot-final-absent, with build/latest/debug variants. Both final worlds contain the guarded external descriptor fixtures. Tests perform512 deterministic lazy generations through a real ChestBlockEntity, across all four vanilla tables, proving vanilla loot and registered disks coexist and each target can select a world-defined disk. A separate fixture tests weight7, disable0, idempotence, empty/unrelated tables and exact preservation of pool/table data. Loaded mixed tables additionally retain ComputerCraft's treasure-disk pool.
+
+The first mixed preservation fixture posted the global event and incorrectly blamed ComputerCraft's valid additional pool on OC. The diagnostic log identifies computercraft:treasure_disk. The corrected preservation fixture invokes OC's handler alone; startup-loaded tables separately prove actual event registration and coexistence. These historical failed attempts are not counted as passing gates.
+
+No real client, OS Computer Use, Modrinth installation or production operation occurred. This proves server-side loaded-table and lazy inventory generation, not discovery/opening of terrain-generated structures by a live player. Beta remains3-6 concentrated workweeks with low confidence; functional work precedes cosmetic polish.
+
 ## Evidence
 
 - A fresh isolated world is seeded before startup by build/finish-port-implementation/prepare-world-loot-probe.py. testWorldLoot requires the existing guarded oc-tests-* world property. Probe files include valid, zero-weight, invalid-count, traversal, bundled-collision and legacy-only cases.
@@ -35,6 +49,6 @@ No real client, Modrinth jar replacement, production operation or OS Computer Us
 
 ## Required follow-up
 
-Actual dungeon/treasure-chest generation is STILL missing. The reference README and application.conf describe it, but Loot.scala's legacy ChestGenHooks implementation and registration are commented out; no active randomDisk caller exists in either the sparse Scala tree or the archived upstream Java sources. The new sampler is a functional prerequisite, not a completed chest-generation feature. Implement the modern loot-table connection and verify actual generated chest contents. Preserve that misc.lootProbability is described as an entry WEIGHT (default5, compared with iron10/gold5/diamond3), not an arbitrary percentage. The old commented container list names dungeon, desert pyramid, jungle pyramid and stronghold library; verify modern table/pool semantics before choosing the hook. Do not mark chest loot complete just because the sampler tests pass.
+Chest generation is implemented at the checkpoint below. Live client/structure discovery, world-descriptor native-program/JVM restart acceptance and broader compatibility remain open. The full port is not complete.
 
 World descriptors are loaded at server startup; live editing/reload/broadcast is not implemented here. Actual client metadata/JEI/crafting/reconnect acceptance, world-descriptor JVM restart/native-program acceptance, large load and broader platform acceptance remain open. Full port goal remains active; beta estimate3-6 concentrated workweeks, low confidence.
