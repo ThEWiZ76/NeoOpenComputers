@@ -32,8 +32,8 @@ public final class RobotAfterimageBlock extends Block {
     public static RobotBlockEntity findRobot(final BlockGetter level, final BlockPos pos) {
         for (final Direction side : Direction.values()) {
             final BlockPos target = pos.relative(side);
-            if (level instanceof Level world && !world.hasChunkAt(target)) continue;
-            if (level.getBlockEntity(target) instanceof RobotBlockEntity robot && robot.movedFrom(pos)) return robot;
+            final RobotBlockEntity robot = RobotBlock.robotIfLoaded(level, target);
+            if (robot != null && robot.movedFrom(pos)) return robot;
         }
         return null;
     }

@@ -18,6 +18,7 @@ import java.util.List;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -64,11 +65,18 @@ public class RobotBlock extends HorizontalDirectionalBlock implements EntityBloc
 
     @Override
     protected VoxelShape getShape(final BlockState state, final BlockGetter level, final BlockPos pos, final CollisionContext context) {
-        if (level.getBlockEntity(pos) instanceof RobotBlockEntity robot && robot.getLevel() != null) {
+        final RobotBlockEntity robot = robotIfLoaded(level, pos);
+        if (robot != null && robot.getLevel() != null) {
             final var offset = robot.movementRenderOffset(robot.getLevel().getGameTime());
             return ROBOT_SHAPE.move(offset.x, offset.y, offset.z);
         }
         return ROBOT_SHAPE;
+    }
+
+    static RobotBlockEntity robotIfLoaded(final BlockGetter level, final BlockPos pos) {
+        // Collision/redstone queries can run during unload and must not revive the chunk.
+        if (level instanceof LevelReader reader && !reader.hasChunkAt(pos)) return null;
+        return level.getBlockEntity(pos) instanceof RobotBlockEntity robot ? robot : null;
     }
 
     @Override
@@ -76,7 +84,8 @@ public class RobotBlock extends HorizontalDirectionalBlock implements EntityBloc
 
     @Override
     protected int getSignal(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction direction) {
-        return level.getBlockEntity(pos) instanceof RobotBlockEntity robot ? robot.redstoneOutput(direction.getOpposite()) : 0;
+        final RobotBlockEntity robot = robotIfLoaded(level, pos);
+        return robot == null ? 0 : robot.redstoneOutput(direction.getOpposite());
     }
 
     @Override
@@ -86,7 +95,8 @@ public class RobotBlock extends HorizontalDirectionalBlock implements EntityBloc
 
     @Override
     public boolean canConnectRedstone(final BlockState state, final BlockGetter level, final BlockPos pos, final Direction side) {
-        return level.getBlockEntity(pos) instanceof RobotBlockEntity robot && robot.hasRedstoneCard();
+        final RobotBlockEntity robot = robotIfLoaded(level, pos);
+        return robot != null && robot.hasRedstoneCard();
     }
 
     @Override
