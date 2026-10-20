@@ -45,10 +45,13 @@ public class ChargerMenu extends AbstractContainerMenu {
         ItemStack moved = ItemStack.EMPTY;
         final Slot slot = slots.get(index);
         if (slot != null && slot.hasItem()) {
-            final ItemStack stack = slot.getItem();
+            final boolean fromCharger = index < CHARGER_SLOT_COUNT;
+            // Finish the owned environment before copying its stack into the player inventory.
+            final ItemStack stack = fromCharger ? chargerInventory.removeItemNoUpdate(index) : slot.getItem();
             moved = stack.copy();
-            if (index < CHARGER_SLOT_COUNT) {
+            if (fromCharger) {
                 if (!moveItemStackTo(stack, CHARGER_SLOT_COUNT, TOTAL_SLOT_COUNT, true)) {
+                    chargerInventory.setItem(index, stack);
                     return ItemStack.EMPTY;
                 }
             } else if (!moveItemStackTo(stack, 0, CHARGER_SLOT_COUNT, false)) {
@@ -57,6 +60,8 @@ public class ChargerMenu extends AbstractContainerMenu {
 
             if (stack.isEmpty()) {
                 slot.setByPlayer(ItemStack.EMPTY);
+            } else if (fromCharger) {
+                slot.setByPlayer(stack);
             } else {
                 slot.setChanged();
             }

@@ -13,6 +13,7 @@ import li.cil.oc.common.blockentity.RobotBlockEntity;
 import li.cil.oc.common.blockentity.ChargerBlockEntity;
 import li.cil.oc.common.item.ItemDriverData;
 import li.cil.oc.common.machine.NativeLua53Architecture;
+import li.cil.oc.common.menu.ChargerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -51,7 +52,10 @@ public final class AddonLifecycleGameTests {
             new TestFunction("addonLifecycle", "addon_lifecycle_charger_node", "neoopencomputers:empty", 400, 0, true, helper -> charger(helper, false)),
             new TestFunction("addonLifecycle", "addon_lifecycle_charger_nodeless", "neoopencomputers:empty", 400, 0, true, helper -> charger(helper, true)),
             new TestFunction("addonLifecycle", "addon_lifecycle_charger_break_node", "neoopencomputers:empty", 100, 0, true, helper -> chargerBreak(helper, false)),
-            new TestFunction("addonLifecycle", "addon_lifecycle_charger_break_nodeless", "neoopencomputers:empty", 100, 0, true, helper -> chargerBreak(helper, true)));
+            new TestFunction("addonLifecycle", "addon_lifecycle_charger_break_nodeless", "neoopencomputers:empty", 100, 0, true, helper -> chargerBreak(helper, true)),
+            new TestFunction("addonLifecycle", "addon_charger_quick_move_node", "neoopencomputers:empty", 100, 0, true, helper -> chargerQuickMove(helper, false, false)),
+            new TestFunction("addonLifecycle", "addon_charger_quick_move_nodeless", "neoopencomputers:empty", 100, 0, true, helper -> chargerQuickMove(helper, true, false)),
+            new TestFunction("addonLifecycle", "addon_charger_quick_move_full_inventory", "neoopencomputers:empty", 100, 0, true, helper -> chargerQuickMove(helper, false, true)));
     }
 
     static ItemStack card(String id, boolean noNode) {
@@ -240,6 +244,43 @@ public final class AddonLifecycleGameTests {
         helper.assertTrue(ItemDriverData.dataTag(drops.getFirst().getItem()).getInt("trackedValue") == 732,
             "Broken charger dropped its pre-disposal addon state");
         drops.forEach(ItemEntity::discard);
+        helper.succeed();
+    }
+
+    private static void chargerQuickMove(GameTestHelper helper, boolean noNode, boolean full) {
+        final String id = "charger-quick-" + noNode + "-" + full;
+        final var pos = new BlockPos(1, 1, 1);
+        helper.setBlock(pos, ModBlocks.CHARGER.get());
+        final ChargerBlockEntity charger = helper.getBlockEntity(pos);
+        final var stack = card(id, noNode);
+        final var tag = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+        tag.putBoolean("oc_api_smoke_tablet", true); tag.putBoolean("oc_api_smoke_dispose_increment", !full);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        charger.setItem(0, stack); initialized(helper, id);
+        invoke("setTrackedValue", new Class<?>[]{String.class, int.class}, id, 731);
+        final var player = helper.makeMockServerPlayerInLevel();
+        if (full) for (int slot = 0; slot < 36; slot++) player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
+        final var menu = new ChargerMenu(43, player.getInventory(), charger);
+        final var returned = menu.quickMoveStack(player, 0);
+        final var delivered = player.getInventory().items.stream().filter(item -> item.is(Items.PAPER)
+            && item.get(DataComponents.CUSTOM_DATA) != null
+            && item.get(DataComponents.CUSTOM_DATA).copyTag().getString("oc_api_smoke_lifecycle_id").equals(id)).toList();
+        if (full) {
+            helper.assertTrue(returned.isEmpty() && delivered.isEmpty() && charger.getItem(0).getCount() == 1,
+                "Failed charger shift-click lost or duplicated the tablet");
+            initialized(helper, id);
+            helper.assertTrue(((Number) observe(id).get("value")).intValue() == 731, "Failed transfer lost live addon state");
+            charger.clearContent(); disposed(helper, id);
+        } else {
+            helper.assertTrue(ItemDriverData.dataTag(returned).getInt("trackedValue") == 732,
+                "Charger shift-click return copied stale pre-disposal state");
+            helper.assertTrue(charger.getItem(0).isEmpty() && delivered.size() == 1 && delivered.getFirst().getCount() == 1,
+                "Charger shift-click did not deliver exactly one tablet");
+            helper.assertTrue(ItemDriverData.dataTag(delivered.getFirst()).getInt("trackedValue") == 732,
+                "Charger shift-click player inventory received stale state");
+            disposed(helper, id);
+            delivered.getFirst().setCount(0);
+        }
         helper.succeed();
     }
 

@@ -723,3 +723,7 @@ Actual addon ordinary load/save exceptions and missing-class linkage failures is
 ## Charger addon lifecycle and persistence - 2026-10-21
 
 Charger actual addon node/no-node lifetime, update-without-power, loaded-server-world factory timing, transfer versus live unload snapshot, stable node identity, idempotent teardown and actual block-break/drop state verified. Initial lifecycle red2; first897 green; stronger actual break red2; final2241 units/918 tests per distinct-JVM phase, mixed994/absent859 all terminal exit0. Native Lua5.3/5.4 cases call restored external charger addon through the retained proxy. Detailed boundaries/evidence: [[../03 manuals/API addon runtime]]. Latest source server-only; installed/client-tested runtime still7f3e8b89b. Real built-in charger filesystem/open-handle JVM acceptance and wider port gates remain open. Beta3-6 concentrated workweeks, low confidence.
+
+## Charger GUI shift-click persistence - 2026-10-21
+
+Actual charger GUI quick-move node/no-node stale-copy bug reproduced (902 tests/2 failures; full-inventory positive control). Menu removes through the owned container before delivery and restores failed/partial insertion. Fixed902 required default tests/2241 units terminal exit0. Previous918/918 native, mixed994/absent859 gates belong to charger lifetime sourceeadbd22f9; no repeated matrix claimed for this menu-only change. See [[../03 manuals/API addon runtime]]. Combined real-client update/GUI acceptance next; wider port gates open. Beta3-6 concentrated workweeks, low confidence.
