@@ -379,12 +379,21 @@ public final class DiskDriveMountableEnvironment extends AbstractManagedEnvironm
                 pendingDiskState = null;
             }
         } catch (java.io.UncheckedIOException | IllegalArgumentException failure) {
-            if (diskEnvironment != null && diskEnvironment.node() != null) {
-                diskEnvironment.node().remove();
-                if (diskEnvironment.node().host() instanceof li.cil.oc.common.FileSystemEnvironment fs) fs.fileSystem().close();
-            }
+            final var failed = diskEnvironment;
             diskEnvironment = null;
             diskDriver = null; diskStack = ItemStack.EMPTY;
+            try {
+                li.cil.oc.common.inventory.ComponentLifecycle.setState(failed, LifecycleState.Disposing);
+            } finally {
+                try {
+                    if (failed != null && failed.node() != null) {
+                        failed.node().remove();
+                        if (failed.node().host() instanceof li.cil.oc.common.FileSystemEnvironment fs) fs.fileSystem().close();
+                    }
+                } finally {
+                    li.cil.oc.common.inventory.ComponentLifecycle.setState(failed, LifecycleState.Disposed);
+                }
+            }
             li.cil.oc.NeoOpenComputers.LOGGER.warn("Cannot restore rack disk-drive media; snapshot retained", failure);
         }
     }

@@ -135,7 +135,7 @@ public final class ApiSmokeAddon {
             if (data.getBoolean("oc_api_smoke_require_world") && (host.world() == null || host.world().isClientSide))
                 throw new IllegalStateException("API smoke fixture requires a loaded server world");
             if (data.contains("oc_api_smoke_block_control")) return new BlockControlEnvironment(data.getString("oc_api_smoke_block_control"));
-            if (data.contains("oc_api_smoke_failure")) return new FailingEnvironment(data.getString("oc_api_smoke_lifecycle_id"), data.getString("oc_api_smoke_failure"));
+            if (data.contains("oc_api_smoke_failure")) return new FailingEnvironment(data.getString("oc_api_smoke_lifecycle_id"), data.getString("oc_api_smoke_failure"), data.getBoolean("oc_api_smoke_no_node"), host, data.getBoolean("oc_api_smoke_reenter_cleanup"));
             if (data.contains("oc_api_smoke_lifecycle_id")) return new TrackedEnvironment(data.getString("oc_api_smoke_lifecycle_id"), data.getBoolean("oc_api_smoke_no_node"), data.getBoolean("oc_api_smoke_dispose_increment"));
             return new Card();
         }
@@ -156,7 +156,7 @@ public final class ApiSmokeAddon {
     public static class TrackedEnvironment extends AbstractManagedEnvironment implements Lifecycle {
         private final List<String> trace = new ArrayList<>();
         private LifecycleState phase;
-        private boolean loaded, updated, updatedOutsideLifetime;
+        private boolean loaded, updated, updatedOutsideLifetime, initializedNetworked;
         private final boolean disposeIncrement;
         private int value;
 
@@ -172,11 +172,13 @@ public final class ApiSmokeAddon {
         Map<String, Object> observation() {
             return Map.of("phase", phase == null ? "missing" : phase.name(), "trace", List.copyOf(trace),
                 "loaded", loaded, "updated", updated, "updatedOutsideLifetime", updatedOutsideLifetime, "value", value,
-                "address", node() == null || node().address() == null ? "" : node().address());
+                "address", node() == null || node().address() == null ? "" : node().address(),
+                "networked", node() != null && node().network() != null, "initializedNetworked", initializedNetworked);
         }
 
         @Override public void onLifecycleStateChange(LifecycleState state) {
             phase = state; trace.add(state.name());
+            if (state == LifecycleState.Initialized) initializedNetworked = node() != null && node().network() != null;
             if (disposeIncrement && state == LifecycleState.Disposing) value++;
         }
         @Override public boolean canUpdate() { return true; }
@@ -190,15 +192,33 @@ public final class ApiSmokeAddon {
 
     private static final class FailingEnvironment extends TrackedEnvironment {
         private final String failure;
-        FailingEnvironment(String id, String failure) { super(id, false); this.failure = failure; }
+        private final EnvironmentHost host;
+        private final boolean reenter;
+        private boolean cleanupReentered;
+        FailingEnvironment(String id, String failure, boolean noNode, EnvironmentHost host, boolean reenter) {
+            super(id, noNode); this.failure = failure; this.host = host; this.reenter = reenter;
+        }
+        @Override Map<String, Object> observation() {
+            final var data = new java.util.LinkedHashMap<>(super.observation());
+            data.put("cleanupReentered", cleanupReentered); return Map.copyOf(data);
+        }
         private void fail(String phase, CompoundTag data) {
             if (!failure.startsWith(phase + "_")) return;
             data.putBoolean("unpublished", true);
+            if (failure.endsWith("durable")) throw new java.io.UncheckedIOException(new java.io.IOException("Expected API smoke " + failure));
+            if (failure.endsWith("argument")) throw new IllegalArgumentException("Expected API smoke " + failure);
             if (failure.endsWith("linkage")) throw new NoClassDefFoundError("Expected API smoke " + failure);
             throw new IllegalStateException("Expected API smoke " + failure);
         }
         @Override public void load(CompoundTag data) { super.load(data); fail("load", data); }
         @Override public void save(CompoundTag data) { super.save(data); fail("save", data); }
+        @Override public void onLifecycleStateChange(LifecycleState state) {
+            super.onLifecycleStateChange(state);
+            if (reenter && state == LifecycleState.Disposing && host instanceof ManagedEnvironment owner) {
+                cleanupReentered = true; owner.save(new CompoundTag());
+            }
+            fail(state.name().toLowerCase(java.util.Locale.ROOT), new CompoundTag());
+        }
     }
 
     public static final class Card extends AbstractManagedEnvironment {

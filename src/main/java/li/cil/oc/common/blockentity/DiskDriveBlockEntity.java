@@ -417,12 +417,22 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
             ComponentLifecycle.setState(diskEnvironment, LifecycleState.Initialized);
             if (diskEnvironment != null || stack.isEmpty()) pendingDiskState = null;
         } catch (java.io.UncheckedIOException | IllegalArgumentException failure) {
-            if (diskEnvironment != null && diskEnvironment.node() != null) {
-                diskEnvironment.node().remove();
-                if (diskEnvironment.node().host() instanceof li.cil.oc.common.FileSystemEnvironment fs) fs.fileSystem().close();
-            }
+            final var failed = diskEnvironment;
+            // Discard partial state before callbacks can re-enter this host's save path.
             diskEnvironment = null;
             diskDriver = null; diskStack = ItemStack.EMPTY;
+            try {
+                ComponentLifecycle.setState(failed, LifecycleState.Disposing);
+            } finally {
+                try {
+                    if (failed != null && failed.node() != null) {
+                        failed.node().remove();
+                        if (failed.node().host() instanceof li.cil.oc.common.FileSystemEnvironment fs) fs.fileSystem().close();
+                    }
+                } finally {
+                    ComponentLifecycle.setState(failed, LifecycleState.Disposed);
+                }
+            }
             li.cil.oc.NeoOpenComputers.LOGGER.warn("Cannot restore disk-drive media at {}; snapshot retained", worldPosition, failure);
         }
     }

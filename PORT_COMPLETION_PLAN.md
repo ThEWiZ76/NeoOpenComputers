@@ -771,3 +771,7 @@ Generic Slot.Floppy addon reproduces20 failures across block/rack owners. Restor
 ## Diskdrive actual client restart and GUI acceptance - 2026-10-21
 
 Actual clienta3d46f1d3: block/node and rack/no-node Slot.Floppy fixtures retain731 through full JVM restart67232->59376, same block node address. Each real DiskDriveScreen QUICK_MOVE delivers one732, reinsert732, then one733; source/cursor empty. Fresh cleanup blocks0/entitiesempty/no owned inventory. Details [[../03 manuals/API addon runtime]]. Client fixture does not claim native Lua/filesystem handles; server matrices cover those separately. Wider port gates open; temporary overnight authority until user return, beta3-6 concentrated workweeks low confidence.
+
+## Failed disk media initialization cleanup - 2026-10-21
+
+Sixteen actual addon startup-failure cases (block/rack x node/no-node x4phases) reproduce missing lifecycle disposal. Clear partial host references, complete Disposing/node cleanup/Disposed without publishing bad state. Tests also observe reentrant host-save cleanup, retain731/42/sibling fields, recover a healthy instance and transfer732 once. Final993 addon/863 absent required tests +2240 units, original terminal exit0. Details [[../03 manuals/API addon runtime]]. Source server-only; client staysa3d46f1d3/PID59376. Wider device/API/workflow and release gates open; beta3-6 concentrated workweeks low confidence.
