@@ -9,10 +9,15 @@ import li.cil.oc.common.blockentity.RobotBlockEntity;
 import li.cil.oc.common.component.NavigationUpgradeEnvironment.NavigationMapData;
 import li.cil.oc.common.item.NavigationUpgradeItem;
 import li.cil.oc.common.machine.NativeLuaArchitecture;
+import li.cil.oc.common.menu.RobotMenu;
+import li.cil.oc.common.item.ItemDriverData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
@@ -164,6 +169,63 @@ public final class UpgradePersistenceGameTests {
             if (node instanceof li.cil.oc.api.network.Component component && component.name().equals("generator")) return component;
         }
         throw new AssertionError("Generator component missing");
+    }
+
+    @GameTest(template = "empty")
+    public static void robotGeneratorQuickMoveDoesNotDuplicateFuel(GameTestHelper helper) throws Exception {
+        generatorMenuTransfer(helper, true, false);
+    }
+
+    @GameTest(template = "empty")
+    public static void robotGeneratorPickupDoesNotDuplicateFuel(GameTestHelper helper) throws Exception {
+        generatorMenuTransfer(helper, false, false);
+    }
+
+    @GameTest(template = "empty")
+    public static void robotGeneratorFullInventoryKeepsQueuedFuel(GameTestHelper helper) throws Exception {
+        generatorMenuTransfer(helper, true, true);
+    }
+
+    private static void generatorMenuTransfer(GameTestHelper helper, boolean quickMove, boolean full) throws Exception {
+        helper.setBlock(new BlockPos(1, 1, 1), ModBlocks.ROBOT.get());
+        final RobotBlockEntity robot = helper.getBlockEntity(new BlockPos(1, 1, 1));
+        robot.setTier(2);
+        RobotMovementPersistenceGameTests.installHardware(helper, robot, List.of(new ItemStack(ModItems.UPGRADE_CONTAINER_TIER2.get())));
+        robot.onLoad();
+        robot.setItem(RobotBlockEntity.CARGO_SLOT_START, new ItemStack(Items.COAL, 3));
+        robot.setItem(1, new ItemStack(ModItems.GENERATOR_UPGRADE.get()));
+        helper.assertTrue(Boolean.TRUE.equals(generator(robot).invoke("insert", robot.machine(), 3)[0]), "Menu fuel fixture rejected coal");
+        final var player = helper.makeMockServerPlayerInLevel(); player.setGameMode(GameType.SURVIVAL);
+        if (full) for (int slot = 0; slot < 36; slot++) player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
+        final var menu = new RobotMenu(44, player.getInventory(), robot);
+        if (quickMove) {
+            final var returned = menu.quickMoveStack(player, 1);
+            if (full) {
+                helper.assertTrue(returned.isEmpty() && robot.getItem(1).is(ModItems.GENERATOR_UPGRADE.get())
+                    && droppedCoal(helper, robot) == 0 && ((Number) generator(robot).invoke("count", robot.machine())[0]).intValue() == 3,
+                    "Failed robot shift-click detached the generator or ejected its queued coal");
+                helper.succeed(); return;
+            }
+            helper.assertTrue(!ItemDriverData.dataTag(returned).contains("inventory"), "Robot shift-click return retained already dropped fuel");
+            final var delivered = player.getInventory().items.stream().filter(item -> item.is(ModItems.GENERATOR_UPGRADE.get())).toList();
+            helper.assertTrue(delivered.size() == 1 && delivered.getFirst().getCount() == 1
+                && !ItemDriverData.dataTag(delivered.getFirst()).contains("inventory"), "Robot shift-click delivered stale generator fuel state");
+            final var source = menu.slots.stream().filter(slot -> slot.container == player.getInventory() && slot.getItem() == delivered.getFirst()).findFirst().orElseThrow();
+            // Shift insertion intentionally prefers the permissive tool slot; target the upgrade slot explicitly.
+            menu.clicked(menu.slots.indexOf(source), 0, ClickType.PICKUP, player);
+            menu.clicked(1, 0, ClickType.PICKUP, player);
+        } else {
+            menu.clicked(1, 0, ClickType.PICKUP, player);
+            helper.assertTrue(menu.getCarried().is(ModItems.GENERATOR_UPGRADE.get())
+                && !ItemDriverData.dataTag(menu.getCarried()).contains("inventory"), "Robot pickup retained already dropped fuel");
+            menu.clicked(1, 0, ClickType.PICKUP, player);
+        }
+        helper.assertTrue(droppedCoal(helper, robot) == 3 && ((Number) generator(robot).invoke("count", robot.machine())[0]).intValue() == 0,
+            "Robot menu removal/reinsert duplicated queued fuel");
+        helper.assertTrue(robot.getItem(RobotBlockEntity.CARGO_SLOT_START).isEmpty(), "Robot menu duplicated cargo coal");
+        helper.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+            new net.minecraft.world.phys.AABB(robot.getBlockPos()).inflate(0.5), entity -> entity.getItem().is(Items.COAL)).forEach(net.minecraft.world.entity.item.ItemEntity::discard);
+        helper.succeed();
     }
 
     private static int droppedCoal(GameTestHelper helper, RobotBlockEntity robot) {

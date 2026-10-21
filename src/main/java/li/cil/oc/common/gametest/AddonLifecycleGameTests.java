@@ -14,6 +14,7 @@ import li.cil.oc.common.blockentity.ChargerBlockEntity;
 import li.cil.oc.common.item.ItemDriverData;
 import li.cil.oc.common.machine.NativeLua53Architecture;
 import li.cil.oc.common.menu.ChargerMenu;
+import li.cil.oc.common.menu.RobotMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -55,7 +56,8 @@ public final class AddonLifecycleGameTests {
             new TestFunction("addonLifecycle", "addon_lifecycle_charger_break_nodeless", "neoopencomputers:empty", 100, 0, true, helper -> chargerBreak(helper, true)),
             new TestFunction("addonLifecycle", "addon_charger_quick_move_node", "neoopencomputers:empty", 100, 0, true, helper -> chargerQuickMove(helper, false, false)),
             new TestFunction("addonLifecycle", "addon_charger_quick_move_nodeless", "neoopencomputers:empty", 100, 0, true, helper -> chargerQuickMove(helper, true, false)),
-            new TestFunction("addonLifecycle", "addon_charger_quick_move_full_inventory", "neoopencomputers:empty", 100, 0, true, helper -> chargerQuickMove(helper, false, true)));
+            new TestFunction("addonLifecycle", "addon_charger_quick_move_full_inventory", "neoopencomputers:empty", 100, 0, true, helper -> chargerQuickMove(helper, false, true)),
+            new TestFunction("addonLifecycle", "addon_robot_quick_move_post_disposal_merge", "neoopencomputers:empty", 100, 0, true, AddonLifecycleGameTests::robotQuickMoveMerge));
     }
 
     static ItemStack card(String id, boolean noNode) {
@@ -282,6 +284,30 @@ public final class AddonLifecycleGameTests {
             delivered.getFirst().setCount(0);
         }
         helper.succeed();
+    }
+
+    private static void robotQuickMoveMerge(GameTestHelper helper) {
+        final String id = "robot-menu-post-disposal";
+        helper.setBlock(new BlockPos(1, 1, 1), ModBlocks.ROBOT.get());
+        final RobotBlockEntity robot = helper.getBlockEntity(new BlockPos(1, 1, 1)); robot.setTier(2);
+        RobotMovementPersistenceGameTests.installHardware(helper, robot, List.of(new ItemStack(ModItems.UPGRADE_CONTAINER_TIER2.get())));
+        robot.onLoad();
+        final var stack = card(id, true); final var tag = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+        tag.putBoolean("oc_api_smoke_upgrade", true); tag.putBoolean("oc_api_smoke_dispose_increment", true);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag)); robot.setItem(1, stack); initialized(helper, id);
+        invoke("setTrackedValue", new Class<?>[]{String.class, int.class}, id, 731);
+        final var expected = stack.copy(); final var expectedTag = expected.get(DataComponents.CUSTOM_DATA).copyTag();
+        final var state = new CompoundTag(); state.putInt("trackedValue", 732); expectedTag.put("oc:data", state);
+        expected.set(DataComponents.CUSTOM_DATA, CustomData.of(expectedTag)); expected.setCount(63);
+        final var player = helper.makeMockServerPlayerInLevel();
+        for (int slot = 0; slot < 36; slot++) player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
+        player.getInventory().setItem(8, expected);
+        final var menu = new RobotMenu(45, player.getInventory(), robot);
+        final var returned = menu.quickMoveStack(player, 1);
+        helper.assertTrue(!returned.isEmpty() && ItemDriverData.dataTag(returned).getInt("trackedValue") == 732
+            && robot.getItem(1).isEmpty() && player.getInventory().getItem(8).getCount() == 64,
+            "Robot shift-click failed to merge the final post-disposal state into a full inventory");
+        disposed(helper, id); helper.succeed();
     }
 
     @SuppressWarnings("unchecked") private static Map<String,Object> observe(String id) { return (Map<String,Object>)invoke("observe",new Class<?>[]{String.class},id); }
