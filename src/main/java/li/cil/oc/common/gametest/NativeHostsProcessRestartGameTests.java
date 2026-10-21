@@ -52,7 +52,7 @@ public final class NativeHostsProcessRestartGameTests {
     private static List<Fixture> fixtures() {
         final var result = new ArrayList<Fixture>();
         for (final var version : List.of("5.3", "5.4"))
-            for (final var kind : List.of("case", "rack", "microcontroller", "robot", "drone"))
+            for (final var kind : List.of("case", "rack", "microcontroller", "robot", "drone", "charger_hdd", "charger_floppy"))
                 result.add(new Fixture(kind, version, result.size()));
         if (Boolean.getBoolean("neoopencomputers.testApiSmokeAddon"))
             for (final var version : List.of("5.3", "5.4"))
@@ -126,12 +126,18 @@ public final class NativeHostsProcessRestartGameTests {
         final boolean addon = Boolean.getBoolean("neoopencomputers.testApiSmokeAddon");
         final var card = addon ? AddonLifecycleGameTests.card("native-" + fixture.kind + "-" + fixture.version, false) : ItemStack.EMPTY;
         switch (fixture.kind) {
-            case "case", "charger", "block_adapter", "block_adapter_nodeless" -> {
+            case "case", "charger", "charger_hdd", "charger_floppy", "block_adapter", "block_adapter_nodeless" -> {
                 level.setBlockAndUpdate(pos, ModBlocks.COMPUTER_CASE_TIER1.get().defaultBlockState());
                 final var host = (ComputerCaseBlockEntity) level.getBlockEntity(pos);
                 host.setItem(ComputerCaseBlockEntity.SLOT_CPU, cpu); host.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, ram);
                 host.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, eeprom);
-                if (fixture.kind.equals("charger")) {
+                if (fixture.kind.startsWith("charger_")) {
+                    helper.assertTrue(level.isEmptyBlock(pos.east()), "Tablet filesystem restart fixture needs empty companion space");
+                    level.setBlockAndUpdate(pos.east(), ModBlocks.CHARGER.get().defaultBlockState());
+                    final var charger = (ChargerBlockEntity) level.getBlockEntity(pos.east());
+                    charger.setItem(0, ModItems.TABLET.get().assembleFromCase(new ItemStack(ModItems.TABLET_CASE_TIER2.get()),
+                        ItemStack.EMPTY, new ItemStack(fixture.kind.equals("charger_hdd") ? ModItems.HDD_TIER1.get() : ModItems.FLOPPY.get())));
+                } else if (fixture.kind.equals("charger")) {
                     helper.assertTrue(level.isEmptyBlock(pos.east()), "Charger restart fixture requires empty companion space");
                     level.setBlockAndUpdate(pos.east(), ModBlocks.CHARGER.get().defaultBlockState());
                     final var charger = (ChargerBlockEntity) level.getBlockEntity(pos.east());
@@ -235,6 +241,17 @@ public final class NativeHostsProcessRestartGameTests {
             local fs = component.proxy(computer.tmpAddress()); local address=fs.address
             local file=assert(fs.open('native-host.bin','wb')); assert(fs.write(file,'a'..string.char(0,255)..'z')); fs.close(file)
             file=assert(fs.open('native-host.bin','rb')); assert(fs.read(file,1)=='a'); local alias=file
+            local external, externalAddress, externalLabel, reader, writer, readerAlias, writerAlias
+            if %s then
+              for candidate in component.list('filesystem') do
+                if candidate~=address then assert(not external, 'ambiguous external filesystem'); external=component.proxy(candidate) end
+              end
+              assert(external, 'charger tablet filesystem missing'); externalAddress=external.address
+              externalLabel=external.setLabel('charger media'); assert(externalLabel=='charger media', 'charger label setup failed')
+              writer=assert(external.open('charger.bin','wb'))
+              assert(external.write(writer,'a'..string.char(0,255)..'z')); writerAlias=writer
+              reader=assert(external.open('charger.bin','rb')); assert(external.read(reader,1)=='a'); readerAlias=reader
+            end
             eeprom.setData('prepared')
             repeat until computer.pullSignal() == 'resume_native_host'
             assert(retained.value==731 and retained.self==retained, 'Lua local/cycle lost')
@@ -242,8 +259,18 @@ public final class NativeHostsProcessRestartGameTests {
             assert(_VERSION=='Lua %s' and computer.getArchitecture()=='Lua %s', 'restored wrong native VM')
             assert(address==computer.tmpAddress() and fs.address==address, 'tmp identity lost')
             assert(alias==file and fs.read(alias,3)==string.char(0,255)..'z', 'open binary handle/offset lost'); fs.close(file)
+            if external then
+              assert(external.address==externalAddress and component.list('filesystem',true)[externalAddress]=='filesystem', 'charger filesystem identity lost')
+              assert(external.getLabel()==externalLabel, 'charger filesystem label lost')
+              assert(readerAlias==reader and external.read(readerAlias,3)==string.char(0,255)..'z', 'charger reader alias/offset/content lost')
+              external.close(reader)
+              assert(writerAlias==writer and external.write(writerAlias,'!'), 'charger writer alias/handle lost'); external.close(writer)
+              local check=assert(external.open('charger.bin','rb'))
+              assert(external.read(check,5)=='a'..string.char(0,255)..'z!', 'charger write offset/content lost'); external.close(check)
+            end
             eeprom.setData('verified')
             while true do computer.pullSignal() end
-            """.formatted(version, version, Boolean.getBoolean("neoopencomputers.testApiSmokeAddon"), addonName, version, version);
+            """.formatted(version, version, Boolean.getBoolean("neoopencomputers.testApiSmokeAddon") && !fixture.kind.startsWith("charger_"),
+                addonName, fixture.kind.startsWith("charger_"), version, version);
     }
 }

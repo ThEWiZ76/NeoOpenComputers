@@ -751,3 +751,7 @@ Final default234 API-addon build914 required tests, absent-addon build862 requir
 ## Robot fuel actual client GUI and restart acceptance - 2026-10-21
 
 Client runtimeb3bfbf558: two seeded robot fuel queues of3 survive graceful JVM restart67708->21412. Actual RobotScreen shift/pickup/reinsert/remove each returns exactly3 coal once, clears item queue/burn metadata, no duplication. Real Lua insertion is covered by server tests, not these CPU-less client fixtures. Fresh cleanup blocks0/entitiesempty/no owned inventory; clock restored running. See [[../03 manuals/API addon runtime]]. Overnight permission active until user return; wider functional gates open, beta3-6 concentrated workweeks low confidence.
+
+## Built-in charger tablet filesystem continuation - 2026-10-21
+
+Built-in tablet HDD/floppy x native5.3/5.4:881 required tests in both distinct JVMs(72872->72788),2241 units, terminal exit0. Real clientb3bfbf558 representative HDD5.3/floppy5.4 survives21412->63652 with open binary reader/writer aliases/offsets, identity/label/local cycle; physical file bytes6100ff7a21 independently verified. Initial label/template fixture mistakes corrected with fresh world/IDs, no production repair required. Fresh cleanup blocks0/entitiesempty/no owned inventory. Details [[../03 manuals/Process restart test]]. Wider functional gates open; beta3-6 concentrated workweeks low confidence.
