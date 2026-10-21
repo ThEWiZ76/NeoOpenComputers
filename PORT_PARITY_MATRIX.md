@@ -787,3 +787,7 @@ Built-in tablet HDD/floppy x native5.3/5.4:881 required tests in both distinct J
 ## Component menu disposal-state conservation - 2026-10-21
 
 Actual addon24 case/adapter/server node/no-node transfer cases plus stronger charger control reproduce13 failures. Detach before delivery, preserve finalized732, support matching post-disposal63->64 merge; conservative shared capacity guard preserves live731 when clearly full. Fixed938/2241 units and absent862/2241 units terminal exit0. Details [[../03 manuals/API addon runtime]]. New source server-tested only; client GUI acceptance next, prior client/native storage gates belong tob3bfbf558. Wider port gates open; beta3-6 concentrated workweeks low confidence.
+
+## Component menu actual client acceptance - 2026-10-21
+
+Actual clientd71ca849f/PID58308: computer card/node, adapter upgrade/no-node and rackserver card/node each deliver one732, reinsert732, then deliver733 by real GUI QUICK_MOVE; computer/server addresses retained. Guarded cleanup three blocks0/entitiesempty/no owned inventory. Full/merge variants stay server938/862+2241-unit evidence. Fixture NBT/sync corrections documented in [[../03 manuals/API addon runtime]]. Wider port gates open; overnight permission until user return, beta3-6 concentrated workweeks low confidence.
