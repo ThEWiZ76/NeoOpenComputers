@@ -8,4 +8,8 @@ public interface DisassemblerTemplate {
     boolean matches(ItemStack stack);
 
     ItemStack[] disassemble(ItemStack stack);
+
+    default DisassemblyResult plan(ItemStack stack, ItemStack[] ingredients) {
+        return new DisassemblyResult(disassemble(stack), null);
+    }
 }

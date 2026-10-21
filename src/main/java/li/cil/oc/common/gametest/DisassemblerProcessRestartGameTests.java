@@ -8,6 +8,7 @@ import li.cil.oc.common.blockentity.CableBlockEntity;
 import li.cil.oc.common.blockentity.DisassemblerBlockEntity;
 import li.cil.oc.common.template.DisassemblerTemplate;
 import li.cil.oc.common.template.DisassemblerTemplates;
+import li.cil.oc.common.template.DisassemblyResult;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestGenerator;
@@ -51,6 +52,11 @@ public final class DisassemblerProcessRestartGameTests {
             public String name() { return "disassembler_restart_probe"; }
             public boolean matches(ItemStack stack) { return stack.is(Items.DIAMOND); }
             public ItemStack[] disassemble(ItemStack stack) { return new ItemStack[]{new ItemStack(Items.EMERALD, 2)}; }
+            public DisassemblyResult plan(ItemStack stack, ItemStack[] ingredients) {
+                final var drop = new ItemStack(Items.IRON_INGOT);
+                final var tag = new CompoundTag(); tag.putInt("retained", 42); drop.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+                return new DisassemblyResult(disassemble(stack), new ItemStack[]{drop});
+            }
         })) {
             NeoOpenComputersGameTests.withCachedConfig(ModSettings.DISASSEMBLER_ITEM_COST, 6D, () ->
                 NeoOpenComputersGameTests.withCachedConfig(ModSettings.DISASSEMBLER_TICK_AMOUNT, 3D, () ->
@@ -88,7 +94,8 @@ public final class DisassemblerProcessRestartGameTests {
         final var saved = machine.saveWithFullMetadata(level.registryAccess());
         helper.assertTrue(saved.getList("oc:queue", 10).size() == 2 && saved.getDouble("oc:buffer") == 3D
             && machine.getItem(0).is(Items.DIAMOND) && machine.getItem(0).getCount() == 1, "Pending paid work or waiting input changed across restart");
-        helper.assertTrue(connector.globalBuffer() == 0D && emeralds(chest) == 0, "Checkpoint unexpectedly advanced or produced items");
+        helper.assertTrue(connector.globalBuffer() == 0D && emeralds(chest) == 0 && immediate(helper, chest) == 1,
+            "Checkpoint advanced unpaid work or lost/repeated its immediate return");
         helper.assertTrue(machine.node().address().equals(expected.getString("address")) && machine.node().network() != null
             && machine.node().network() == cable.node().network(), "Disassembler cable network/address not restored");
         if (!prepare) {
@@ -96,23 +103,35 @@ public final class DisassemblerProcessRestartGameTests {
             connector.changeBuffer(3); tick(helper, machine);
             helper.assertTrue(emeralds(chest) == 1, "Saved partial energy was lost or counted twice");
             connector.changeBuffer(6); tick(helper, machine); tick(helper, machine);
-            helper.assertTrue(emeralds(chest) == 2 && machine.getItem(0).is(Items.DIAMOND), "First job lost outputs or consumed waiting input early");
+            helper.assertTrue(emeralds(chest) == 2 && immediate(helper, chest) == 1 && machine.getItem(0).is(Items.DIAMOND),
+                "First job lost outputs, repeated immediate contents or consumed waiting input early");
             tick(helper, machine);
-            helper.assertTrue(machine.getItem(0).isEmpty(), "Second waiting input did not automatically start after restored work finished");
+            helper.assertTrue(machine.getItem(0).isEmpty() && immediate(helper, chest) == 2,
+                "Second waiting input did not start/return its own contents exactly once");
             connector.changeBuffer(12);
             for (int i = 0; i < 7; i++) tick(helper, machine);
             final var finished = machine.saveWithFullMetadata(level.registryAccess());
-            helper.assertTrue(emeralds(chest) == 4 && machine.isEmpty() && finished.getList("oc:queue", 10).isEmpty()
+            helper.assertTrue(emeralds(chest) == 4 && immediate(helper, chest) == 2 && machine.isEmpty() && finished.getList("oc:queue", 10).isEmpty()
                 && finished.getDouble("oc:buffer") == 0D && connector.globalBuffer() == 0D, "Two jobs did not finish exactly once for their remaining21 energy");
         }
         expected.putString("phase", prepare ? "prepared" : "verified"); expected.putLong("pid", ProcessHandle.current().pid());
         final var paper = new ItemStack(Items.PAPER); paper.set(DataComponents.CUSTOM_DATA, CustomData.of(expected)); chest.setItem(26, paper); chest.setChanged();
-        NeoOpenComputers.LOGGER.info("Disassembler restart probe {} in PID {}; paid queue and waiting input preserved", prepare ? "prepared" : "verified", ProcessHandle.current().pid());
+        NeoOpenComputers.LOGGER.info("Disassembler restart probe {} in PID {}; paid queue, waiting input and immediate returns preserved", prepare ? "prepared" : "verified", ProcessHandle.current().pid());
     }
 
     private static int emeralds(ChestBlockEntity chest) {
         int count = 0;
         for (int slot = 0; slot < chest.getContainerSize(); slot++) if (chest.getItem(slot).is(Items.EMERALD)) count += chest.getItem(slot).getCount();
+        return count;
+    }
+
+    private static int immediate(GameTestHelper helper, ChestBlockEntity chest) {
+        int count = 0;
+        for (int slot = 0; slot < chest.getContainerSize(); slot++) if (chest.getItem(slot).is(Items.IRON_INGOT)) {
+            final var data = chest.getItem(slot).get(DataComponents.CUSTOM_DATA);
+            helper.assertTrue(data != null && data.copyTag().getInt("retained") == 42, "Immediate contents lost their saved item data");
+            count += chest.getItem(slot).getCount();
+        }
         return count;
     }
 

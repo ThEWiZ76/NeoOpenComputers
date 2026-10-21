@@ -34,6 +34,12 @@ public final class DisassemblerIngredients {
     public static ItemStack[] recover(final Level level, final ItemStack stack) {
         if (level == null || !DisassemblerTemplates.isAllowed(stack)
             || !ModSettings.disassembleAllTheThings() && li.cil.oc.api.Items.get(stack) == null) return new ItemStack[0];
+        return forTemplate(level, stack);
+    }
+
+    /** Selected templates may accept foreign items even when ordinary foreign recovery is disabled. */
+    public static ItemStack[] forTemplate(final Level level, final ItemStack stack) {
+        if (level == null || !DisassemblerTemplates.isAllowed(stack)) return new ItemStack[0];
         final var blacklist = new HashSet<>(ModSettings.disassemblerInputBlacklist());
         for (var holder : index(level).byItem.getOrDefault(stack.getItem(), List.of())) {
             final var recipe = holder.value();

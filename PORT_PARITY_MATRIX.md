@@ -823,3 +823,9 @@ Actual clientb15a1bad1, fresh case02: real hopper feeds builtin tablet, autoqueu
 ## Ordinary disassembler recipe recovery and configuration - 2026-10-21
 
 15 real recipe tests,9 initial failures. Restore default OC/API-only recipe recovery, opt-in foreign recipes, blacklist and stable safe ingredient resolution; keep explicit templates first. Preserve bucket/fraction/self-loop rules and tags/source arrays. Same-ID recipe replacement/removal reflected immediately; serialized partial2/4 job survives recipe removal and completes with final2.899 default/1124 mixed required +2240 units, final original exit0/full saves. Details [[../03 manuals/API addon runtime]], plan [[Disassembler recipe recovery]]. Source server-only; installed clientb15a1bad1/PID45768/default0.05. Legacy IMC/immediate drops, remaining builtin templates/large jobs/creative and broader release gates open; beta3-6 workweeks low confidence.
+
+## Disassembler legacy IMC, immediate contents and larger jobs - 2026-10-21
+
+16 new cases reproduce14 failures. Restore2arg IMC/raw ingredients, separate guaranteed immediate contents from paid/lossy queue, isolate bad registration/ordinary errors while propagating fatal Error. Preview/selector copies and one-unit consumption protect inputs; larger jobs preserve buffered output and route overflow within slot limits.915 default/1140 mixed +2240 units; strict JVM pair921/921 at69696->68920 retains paid3/waiting input and immediate iron42, finishes exactemerald4/iron2 without repeats. Details [[../03 manuals/API addon runtime]]. Source server-only; client remainsb15a1bad1/PID45768/default0.05. Builtin/creative/combined-client and broader release gates open; beta3-6 workweeks low confidence.
+
+Additional open core requirement: missing casecreative/creative computer and robot cases; no silent tier downgrade or upstream-dependency exception.

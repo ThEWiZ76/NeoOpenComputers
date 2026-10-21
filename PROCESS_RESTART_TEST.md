@@ -140,3 +140,9 @@ Actual clientad217eb45, nativeLua5.4 fullrestart65876->60120 retains cyclic loca
 ## Disassembler actual client hopper, saved queue and chest output - 2026-10-21
 
 Actual clientb15a1bad1, fresh case02: real hopper feeds builtin tablet, autoqueues3 retaining CPU/RAM731/42. Full client57604->69524 retains unpaid queue/address; verified four1500 energy sources yield exactcase/CPU/RAM, all6000 consumed, stable no-repeat snapshots. Actual chest screen verifies item tags after completed empty machine is removed for vanilla lid headroom. First case01 startup/power fixture errors not accepted. Final area0/entitiesempty/no owned inventory; exact original config0.05 restored then relaunched45768. Details [[../03 manuals/API addon runtime]]. Recipe/templates/IMC/creative/larger-job and broader release gates remain; beta3-6 workweeks low confidence; overnight authority until user return.
+
+## Disassembler legacy IMC, immediate contents and larger jobs - 2026-10-21
+
+16 new cases reproduce14 failures. Restore2arg IMC/raw ingredients, separate guaranteed immediate contents from paid/lossy queue, isolate bad registration/ordinary errors while propagating fatal Error. Preview/selector copies and one-unit consumption protect inputs; larger jobs preserve buffered output and route overflow within slot limits.915 default/1140 mixed +2240 units; strict JVM pair921/921 at69696->68920 retains paid3/waiting input and immediate iron42, finishes exactemerald4/iron2 without repeats. Details [[../03 manuals/API addon runtime]]. Source server-only; client remainsb15a1bad1/PID45768/default0.05. Builtin/creative/combined-client and broader release gates open; beta3-6 workweeks low confidence.
+
+Additional open core requirement: missing casecreative/creative computer and robot cases; no silent tier downgrade or upstream-dependency exception.

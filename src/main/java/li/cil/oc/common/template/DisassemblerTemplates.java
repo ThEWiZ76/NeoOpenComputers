@@ -18,7 +18,7 @@ public final class DisassemblerTemplates {
     public static Optional<DisassemblerTemplate> select(final ItemStack stack) {
         if (!isAllowed(stack)) return Optional.empty();
         for (DisassemblerTemplate template : templates()) {
-            if (template.matches(stack)) {
+            if (template.matches(stack.copy())) {
                 return Optional.of(template);
             }
         }

@@ -16,6 +16,7 @@ import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.template.DisassemblerTemplates;
 import li.cil.oc.common.template.DisassemblerIngredients;
+import li.cil.oc.common.template.DisassemblyResult;
 import li.cil.oc.common.util.DisassemblerWork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -85,7 +86,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     }
 
     public boolean canDisassemble() {
-        return queuedOutputs.isEmpty() && outputsFit(outputsFor(items.get(SLOT_INPUT)));
+        return queuedOutputs.isEmpty() && !resultFor(items.get(SLOT_INPUT)).isEmpty();
     }
 
     public boolean disassemble() {
@@ -93,12 +94,12 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
             return false;
         }
         final ItemStack input = items.get(SLOT_INPUT);
-        final ItemStack[] outputs = outputsFor(input);
-        if (!outputsFit(outputs)) {
+        final DisassemblyResult result = resultFor(input);
+        if (result.isEmpty()) {
             return false;
         }
         queuedOutputs.clear();
-        for (final ItemStack output : outputs) {
+        for (final ItemStack output : result.queued()) {
             if (output == null || output.isEmpty()) {
                 continue;
             }
@@ -107,29 +108,25 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
                 queuedOutputs.add(stack.split(1));
             }
         }
-        if (queuedOutputs.isEmpty()) {
-            return false;
-        }
         setActive(false);
-        items.set(SLOT_INPUT, ItemStack.EMPTY);
+        removeItem(SLOT_INPUT, 1);
         disassemblyBuffer = 0D;
         setChanged();
+        routeOutputs(result.immediate());
         return true;
     }
 
     public boolean disassemble(final RandomSource random, final double breakChance) {
         if (!queuedOutputs.isEmpty()) return false;
         final ItemStack input = items.get(SLOT_INPUT);
-        final ItemStack[] ingredients = outputsFor(input);
-        if (ingredients == null || ingredients.length == 0) return false;
-        final ItemStack[] outputs = survivingOutputs(ingredients, random, breakChance);
-        if (!outputsFit(outputs) && outputs.length > 0 && !hasAdjacentInventory()) {
-            return false;
-        }
+        final DisassemblyResult result = resultFor(input);
+        if (result.isEmpty()) return false;
+        final ItemStack[] outputs = survivingOutputs(result.queued(), random, breakChance);
         setActive(false);
-        items.set(SLOT_INPUT, ItemStack.EMPTY);
-        routeOutputs(outputs);
+        removeItem(SLOT_INPUT, 1);
         setChanged();
+        routeOutputs(result.immediate());
+        routeOutputs(outputs);
         return true;
     }
 
@@ -473,18 +470,6 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
         }
     }
 
-    private boolean hasAdjacentInventory() {
-        if (level == null) {
-            return false;
-        }
-        for (Direction direction : Direction.values()) {
-            if (adjacentInventory(direction) != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private ItemStack insertIntoAdjacentInventory(final ItemStack stack) {
         if (level == null || stack.isEmpty()) {
             return stack;
@@ -505,9 +490,8 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     private ItemStack insertIntoInternalOutput(final ItemStack stack) {
         ItemStack remaining = stack;
         for (int slot = SLOT_OUTPUT_START; slot < CONTAINER_SIZE; slot++) {
-            if (items.get(slot).isEmpty()) {
-                items.set(slot, remaining.copy());
-                return ItemStack.EMPTY;
+            if (items.get(slot).isEmpty() && !remaining.isEmpty()) {
+                items.set(slot, remaining.split(Math.min(remaining.getCount(), Math.min(remaining.getMaxStackSize(), getMaxStackSize()))));
             }
         }
         return remaining;
@@ -529,26 +513,13 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
         return DisassemblerTemplates.select(stack).isPresent() || DisassemblerIngredients.recover(level, stack).length > 0;
     }
 
-    private ItemStack[] outputsFor(final ItemStack stack) {
-        final var template = DisassemblerTemplates.select(stack);
-        return template.isPresent() ? template.get().disassemble(stack) : DisassemblerIngredients.recover(level, stack);
-    }
-
-    private boolean outputsFit(final ItemStack[] outputs) {
-        if (outputs == null || outputs.length == 0 || outputs.length > OUTPUT_SLOT_COUNT) {
-            return false;
-        }
-        for (int slot = SLOT_OUTPUT_START; slot < CONTAINER_SIZE; slot++) {
-            if (!items.get(slot).isEmpty()) {
-                return false;
-            }
-        }
-        for (ItemStack output : outputs) {
-            if (output == null || output.isEmpty()) {
-                return false;
-            }
-        }
-        return true;
+    private DisassemblyResult resultFor(final ItemStack stack) {
+        if (stack.isEmpty()) return DisassemblyResult.EMPTY;
+        final ItemStack unit = stack.copyWithCount(1);
+        final var template = DisassemblerTemplates.select(unit);
+        if (template.isEmpty()) return new DisassemblyResult(DisassemblerIngredients.recover(level, unit), null);
+        final var result = template.get().plan(unit, DisassemblerIngredients.forTemplate(level, unit));
+        return result == null ? DisassemblyResult.EMPTY : result;
     }
 
     private static boolean isValidSlot(final int slot) {

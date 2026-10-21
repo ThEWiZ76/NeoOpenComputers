@@ -5370,7 +5370,10 @@ public final class NeoOpenComputersGameTests {
         helper.assertTrue(!disassembler.canPlaceItem(DisassemblerBlockEntity.SLOT_OUTPUT_START, tablet), "Disassembler output slot accepted player input");
 
         disassembler.setItem(DisassemblerBlockEntity.SLOT_OUTPUT_START, new ItemStack(Items.STONE));
-        helper.assertTrue(DisassemblerMenu.stateFor(disassembler) == DisassemblerMenu.STATE_BLOCKED, "Blocked disassembler did not report blocked state");
+        helper.assertTrue(DisassemblerMenu.stateFor(disassembler) == DisassemblerMenu.STATE_READY, "Buffered output incorrectly blocked a new routable job");
+        disassembler.setItem(DisassemblerBlockEntity.SLOT_INPUT, new ItemStack(Items.BEDROCK));
+        helper.assertTrue(DisassemblerMenu.stateFor(disassembler) == DisassemblerMenu.STATE_BLOCKED && disassembler.getItem(DisassemblerBlockEntity.SLOT_INPUT).is(Items.BEDROCK),
+            "Unsupported input did not report blocked state or was consumed");
         helper.succeed();
     }
 

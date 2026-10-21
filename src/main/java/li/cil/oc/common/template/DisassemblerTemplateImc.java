@@ -1,6 +1,7 @@
 package li.cil.oc.common.template;
 
 import li.cil.oc.api.IMC;
+import li.cil.oc.NeoOpenComputers;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.InterModComms;
@@ -17,19 +18,30 @@ public final class DisassemblerTemplateImc {
         final List<DisassemblerTemplates.Registration> registrations = new ArrayList<>();
         messages
             .filter(message -> IMC.REGISTER_DISASSEMBLER_TEMPLATE.equals(message.method()))
-            .map(message -> message.messageSupplier().get())
-            .filter(CompoundTag.class::isInstance)
-            .map(CompoundTag.class::cast)
-            .map(DisassemblerTemplateImc::templateFrom)
-            .forEach(template -> registrations.add(DisassemblerTemplates.register(template)));
+            .forEach(message -> {
+                try {
+                    final Object payload = message.messageSupplier().get();
+                    if (payload instanceof CompoundTag tag) registrations.add(DisassemblerTemplates.register(templateFrom(tag)));
+                } catch (RuntimeException failure) {
+                    NeoOpenComputers.LOGGER.warn("Failed registering disassembler template", failure);
+                }
+            });
         return registrations;
     }
 
     private static DisassemblerTemplate templateFrom(final CompoundTag tag) {
         final String name = tag.contains("name") ? tag.getString("name") : "imc";
         final Method select = staticMethod(tag.getString("select"), ItemStack.class);
-        final Method disassemble = staticMethod(tag.getString("disassemble"), ItemStack.class);
+        final Method disassemble = disassemblerMethod(tag.getString("disassemble"));
         return new CallbackTemplate(name, select, disassemble);
+    }
+
+    private static Method disassemblerMethod(final String name) {
+        try { return staticMethod(name, ItemStack.class, ItemStack[].class); }
+        catch (IllegalArgumentException failure) {
+            if (failure.getCause() instanceof NoSuchMethodException) return staticMethod(name, ItemStack.class);
+            throw failure;
+        }
     }
 
     private static Method staticMethod(final String methodName, final Class<?>... parameterTypes) {
@@ -63,8 +75,18 @@ public final class DisassemblerTemplateImc {
         return false;
     }
 
-    private static ItemStack[] invokeStacks(final Method method, final ItemStack stack) {
-        final Object result = invoke(method, stack);
+    private static DisassemblyResult outputs(final Object result) {
+        if (result instanceof ItemStack[] stacks) return new DisassemblyResult(stacks, null);
+        if (result instanceof Object[] pair && pair.length == 2
+            && (pair[0] instanceof ItemStack[] || pair[1] instanceof ItemStack[])
+            && (pair[0] instanceof ItemStack || pair[0] instanceof ItemStack[])
+            && (pair[1] instanceof ItemStack || pair[1] instanceof ItemStack[])) {
+            return new DisassemblyResult(stacks(pair[0]), stacks(pair[1]));
+        }
+        return new DisassemblyResult(stacks(result), null);
+    }
+
+    private static ItemStack[] stacks(final Object result) {
         if (result instanceof ItemStack itemStack) {
             return new ItemStack[]{itemStack};
         }
@@ -95,7 +117,10 @@ public final class DisassemblerTemplateImc {
     private static Object invoke(final Method method, final Object... args) {
         try {
             return method.invoke(null, args);
-        } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
+        } catch (InvocationTargetException e) {
+            if (e.getCause() instanceof Error fatal) throw fatal;
+            return null;
+        } catch (IllegalAccessException | IllegalArgumentException e) {
             return null;
         }
     }
@@ -108,7 +133,13 @@ public final class DisassemblerTemplateImc {
 
         @Override
         public ItemStack[] disassemble(final ItemStack stack) {
-            return invokeStacks(disassemble, stack);
+            return plan(stack, new ItemStack[0]).queued();
+        }
+
+        @Override
+        public DisassemblyResult plan(final ItemStack stack, final ItemStack[] ingredients) {
+            final Object result = disassemble.getParameterCount() == 2 ? invoke(disassemble, stack, ingredients) : invoke(disassemble, stack);
+            return outputs(result);
         }
     }
 
