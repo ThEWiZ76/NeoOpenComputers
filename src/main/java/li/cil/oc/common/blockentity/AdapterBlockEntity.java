@@ -71,6 +71,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private final ManagedEnvironment[] blockEnvironments = new ManagedEnvironment[SIDE_COUNT];
     private final DriverBlock[] blockDrivers = new DriverBlock[SIDE_COUNT];
+    private final Object[] blockTargets = new Object[SIDE_COUNT];
     private final String[] blockEnvironmentNames = new String[SIDE_COUNT];
     private final CompoundTag[] blockEnvironmentData = new CompoundTag[SIDE_COUNT];
     private final boolean[] openSides = new boolean[SIDE_COUNT];
@@ -349,13 +350,21 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     }
 
     public void refreshNeighbor(final BlockPos changedPos) {
+        refreshNeighbor(changedPos, false);
+    }
+
+    public void invalidateNeighbor(final BlockPos changedPos) {
+        refreshNeighbor(changedPos, true);
+    }
+
+    private void refreshNeighbor(final BlockPos changedPos, final boolean force) {
         if (level == null || changedPos == null) {
             return;
         }
         final BlockPos delta = changedPos.subtract(worldPosition);
         for (Direction direction : Direction.values()) {
             if (direction.getStepX() == delta.getX() && direction.getStepY() == delta.getY() && direction.getStepZ() == delta.getZ()) {
-                refreshSide(direction);
+                refreshSide(direction, force);
                 return;
             }
         }
@@ -461,6 +470,10 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
     }
 
     private void refreshSide(final Direction direction) {
+        refreshSide(direction, false);
+    }
+
+    private void refreshSide(final Direction direction, final boolean force) {
         if (level == null || node() == null || node().network() == null) {
             return;
         }
@@ -478,7 +491,8 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
             removeBlockEnvironment(index);
             return;
         }
-        if (level.getBlockEntity(targetPos) instanceof li.cil.oc.api.network.Environment) {
+        final BlockEntity targetEntity = level.getBlockEntity(targetPos);
+        if (targetEntity instanceof li.cil.oc.api.network.Environment) {
             removeBlockEnvironment(index);
             return;
         }
@@ -488,11 +502,18 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
             removeBlockEnvironment(index);
             return;
         }
-        if (blockEnvironments[index] != null && blockDrivers[index] == driver) {
+        final Object target = targetEntity == null ? level.getBlockState(targetPos).getBlock() : targetEntity;
+        final boolean changedDriver = blockEnvironments[index] != null && !driver.equals(blockDrivers[index]);
+        if (!force && blockEnvironments[index] != null && !changedDriver && blockTargets[index] == target) {
             return;
         }
 
         removeBlockEnvironment(index);
+        if (changedDriver) {
+            // A different driver set owns new state, even when both use the compound wrapper class.
+            blockEnvironmentNames[index] = null;
+            blockEnvironmentData[index] = null;
+        }
         final ManagedEnvironment environment = driver.createEnvironment(level, targetPos, direction);
         if (environment == null) {
             return;
@@ -505,6 +526,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         }
         blockEnvironments[index] = environment;
         blockDrivers[index] = driver;
+        blockTargets[index] = target;
         blockEnvironmentNames[index] = environmentName;
         if (blockEnvironmentData[index] == null) {
             blockEnvironmentData[index] = new CompoundTag();
@@ -518,6 +540,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         final ManagedEnvironment environment = blockEnvironments[index];
         blockEnvironments[index] = null;
         blockDrivers[index] = null;
+        blockTargets[index] = null;
         if (environment != null) {
             ComponentLifecycle.setState(environment, LifecycleState.Disposing);
             final CompoundTag data = blockEnvironmentData[index] != null ? blockEnvironmentData[index] : new CompoundTag();
@@ -586,8 +609,7 @@ public class AdapterBlockEntity extends BlockEntity implements Adapter, Environm
         for (int index = 0; index < SIDE_COUNT; index++) {
             removeBlockEnvironment(index);
         }
-        Arrays.fill(blockEnvironmentNames, null);
-        Arrays.fill(blockEnvironmentData, null);
+        // Keep serialized side state available to a save performed after chunk teardown.
         removeNode();
     }
 

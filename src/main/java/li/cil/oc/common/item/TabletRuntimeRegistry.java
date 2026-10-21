@@ -8,6 +8,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.HashMap;
@@ -33,6 +34,7 @@ public final class TabletRuntimeRegistry {
         NeoForge.EVENT_BUS.addListener(TabletRuntimeRegistry::onLogout);
         NeoForge.EVENT_BUS.addListener(TabletRuntimeRegistry::onToss);
         NeoForge.EVENT_BUS.addListener(TabletRuntimeRegistry::onWorldUnload);
+        NeoForge.EVENT_BUS.addListener(TabletRuntimeRegistry::onServerStopping);
         NeoForge.EVENT_BUS.addListener(TabletRuntimeRegistry::onServerStopped);
     }
 
@@ -192,5 +194,15 @@ public final class TabletRuntimeRegistry {
     private static void onServerStopped(ServerStoppedEvent event) {
         for (Entry entry : runtimes.values()) entry.runtime.close(false);
         runtimes.clear();
+    }
+
+    private static void onServerStopping(ServerStoppingEvent event) {
+        // Player files are saved before disconnect callbacks can finish during shutdown.
+        for (var entry : List.copyOf(runtimes.entrySet())) {
+            if (entry.getValue().runtime.world().getServer() == event.getServer()) {
+                entry.getValue().runtime.close(false);
+                runtimes.remove(entry.getKey());
+            }
+        }
     }
 }

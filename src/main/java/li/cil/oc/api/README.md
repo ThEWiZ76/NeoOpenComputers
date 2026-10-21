@@ -47,6 +47,8 @@ Synchronous item `load`/`save` serialization and nonfatal linkage errors are log
 
 Managed components may implement `li.cil.oc.api.util.Lifecycle` to receive `Constructing`, `Initializing`, `Initialized`, `Disposing`, and `Disposed`. Loading occurs after `Constructing`; node connection occurs after `Initializing`; regular updates begin after `Initialized`. Disposal belongs to removal of the owned component, rather than a temporary network remap. A managed item without a node still loads, saves and updates. Client-side addon lifetimes remain a separate acceptance gate.
 
+For neighboring blocks, register a `DriverBlock` with `Driver.add`. An adapter keeps its environment while the matched driver set and physical target remain unchanged, retains saved side data for reload, and starts fresh state when an active matched driver set changes. Returned environments may implement `NamedBlock` to choose the compound component's preferred name and priority. A node-less child can still update and persist; naming it alone does not make it network-visible.
+
 `tools/api-smoke-addon` contains a standalone NeoForge fixture compiled against the API JAR without OC implementation output. Build it with `gradlew.bat apiSmokeAddonJar` and include it in developer runs with `-PwithApiSmokeAddon`. It is separate from OC's published artifacts. The opt-in server tests exercise real LuaJ/native callbacks and native userdata/component persistence across normal process restarts; this is not a claim that every addon or old binary is compatible.
 
 ## Attach Files

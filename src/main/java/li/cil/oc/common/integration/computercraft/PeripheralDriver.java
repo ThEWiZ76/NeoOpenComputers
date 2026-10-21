@@ -174,7 +174,7 @@ public final class PeripheralDriver implements DriverBlock {
                 if (!invalid) {
                     invalid = true; node().remove();
                     final BlockPos adapterPos = pos.relative(side.getOpposite());
-                    if (world.hasChunkAt(adapterPos) && world.getBlockEntity(adapterPos) instanceof AdapterBlockEntity adapter) adapter.refreshNeighbor(pos);
+                    if (world.hasChunkAt(adapterPos) && world.getBlockEntity(adapterPos) instanceof AdapterBlockEntity adapter) adapter.invalidateNeighbor(pos);
                 }
                 return;
             }

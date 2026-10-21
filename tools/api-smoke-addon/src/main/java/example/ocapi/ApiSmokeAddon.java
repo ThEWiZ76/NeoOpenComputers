@@ -3,6 +3,8 @@ package example.ocapi;
 import li.cil.oc.api.Driver;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.driver.item.Slot;
+import li.cil.oc.api.driver.DriverBlock;
+import li.cil.oc.api.driver.NamedBlock;
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -13,10 +15,14 @@ import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import li.cil.oc.api.prefab.AbstractValue;
 import li.cil.oc.api.util.Lifecycle;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -33,6 +39,8 @@ public final class ApiSmokeAddon {
     public ApiSmokeAddon(IEventBus bus) {
         bus.addListener((FMLCommonSetupEvent event) -> event.enqueueWork(() -> {
             Driver.add(new CardDriver());
+            Driver.add(new BlockDriver(false));
+            Driver.add(new BlockDriver(true));
             Driver.add((value, output) -> {
                 if (value instanceof Description description) {
                     output.put("name", description.name());
@@ -43,6 +51,44 @@ public final class ApiSmokeAddon {
     }
 
     private record Description(String name) { }
+
+    public static String blockId(BlockPos pos, Direction side) { return "block-smoke-" + pos.toShortString() + "-" + side.getName(); }
+
+    public static final class BlockDriver implements DriverBlock {
+        private final boolean noNode;
+        public BlockDriver(boolean noNode) { this.noNode = noNode; }
+        @Override public boolean worksWith(Level world, BlockPos pos, Direction side) {
+            return world.getBlockEntity(pos) instanceof BarrelBlockEntity barrel && barrel.getCustomName() != null
+                && barrel.getCustomName().getString().equals("OC API smoke block " + (noNode ? "nodeless" : "node"));
+        }
+        @Override public ManagedEnvironment createEnvironment(Level world, BlockPos pos, Direction side) {
+            final var barrel = (BarrelBlockEntity) world.getBlockEntity(pos);
+            return new BlockTrackedEnvironment(blockId(pos, side), noNode, barrel.getPersistentData().getInt("oc_api_smoke_target"));
+        }
+    }
+
+    private static final class BlockTrackedEnvironment extends TrackedEnvironment implements NamedBlock {
+        private final int targetMarker;
+        BlockTrackedEnvironment(String id, boolean noNode, int targetMarker) { super(id, noNode); this.targetMarker = targetMarker; }
+        @Override public String preferredName() { return "api_block_lifecycle"; }
+        @Override public int priority() { return 1000; }
+        @Override Map<String, Object> observation() {
+            final var result = new LinkedHashMap<>(super.observation()); result.put("targetMarker", targetMarker); return Map.copyOf(result);
+        }
+    }
+
+    /** A separate real API item can inspect this addon's node-less owned state. */
+    public static final class BlockControlEnvironment extends AbstractManagedEnvironment {
+        private final String id;
+        BlockControlEnvironment(String id) {
+            this.id = id; setNode(Network.newNode(this, Visibility.Network).withComponent("api_block_control").create());
+        }
+        @Callback public Object[] getPhase(Context context, Arguments args) { return new Object[]{observe(id).get("phase")}; }
+        @Callback public Object[] getValue(Context context, Arguments args) { return new Object[]{observe(id).get("value")}; }
+        @Callback public Object[] setValue(Context context, Arguments args) {
+            final int value = args.checkInteger(0); setTrackedValue(id, value); return new Object[]{value};
+        }
+    }
 
     public static final class CardDriver extends li.cil.oc.api.prefab.DriverItem implements li.cil.oc.api.driver.item.Chargeable {
         @Override
@@ -87,6 +133,7 @@ public final class ApiSmokeAddon {
             final var data = stack.get(DataComponents.CUSTOM_DATA).copyTag();
             if (data.getBoolean("oc_api_smoke_require_world") && (host.world() == null || host.world().isClientSide))
                 throw new IllegalStateException("API smoke fixture requires a loaded server world");
+            if (data.contains("oc_api_smoke_block_control")) return new BlockControlEnvironment(data.getString("oc_api_smoke_block_control"));
             if (data.contains("oc_api_smoke_failure")) return new FailingEnvironment(data.getString("oc_api_smoke_lifecycle_id"), data.getString("oc_api_smoke_failure"));
             if (data.contains("oc_api_smoke_lifecycle_id")) return new TrackedEnvironment(data.getString("oc_api_smoke_lifecycle_id"), data.getBoolean("oc_api_smoke_no_node"), data.getBoolean("oc_api_smoke_dispose_increment"));
             return new Card();

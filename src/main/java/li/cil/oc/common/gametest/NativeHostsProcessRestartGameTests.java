@@ -10,6 +10,7 @@ import li.cil.oc.common.ModBlocks;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.blockentity.ComputerCaseBlockEntity;
 import li.cil.oc.common.blockentity.ChargerBlockEntity;
+import li.cil.oc.common.blockentity.AdapterBlockEntity;
 import li.cil.oc.common.blockentity.MicrocontrollerBlockEntity;
 import li.cil.oc.common.blockentity.RackBlockEntity;
 import li.cil.oc.common.blockentity.RobotBlockEntity;
@@ -17,6 +18,7 @@ import li.cil.oc.common.entity.DroneEntity;
 import li.cil.oc.common.item.DroneItem;
 import li.cil.oc.common.item.ItemDriverData;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestGenerator;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -28,6 +30,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -52,7 +55,9 @@ public final class NativeHostsProcessRestartGameTests {
             for (final var kind : List.of("case", "rack", "microcontroller", "robot", "drone"))
                 result.add(new Fixture(kind, version, result.size()));
         if (Boolean.getBoolean("neoopencomputers.testApiSmokeAddon"))
-            for (final var version : List.of("5.3", "5.4")) result.add(new Fixture("charger", version, result.size()));
+            for (final var version : List.of("5.3", "5.4"))
+                for (final var kind : List.of("charger", "block_adapter", "block_adapter_nodeless"))
+                    result.add(new Fixture(kind, version, result.size()));
         return result;
     }
 
@@ -117,11 +122,11 @@ public final class NativeHostsProcessRestartGameTests {
             .filter(type -> li.cil.oc.api.Machine.getArchitectureName(type).equals("Lua " + fixture.version)).findFirst().orElseThrow();
         ((MutableProcessor) Driver.driverFor(cpu)).setArchitecture(cpu, architecture);
         final var ram = new ItemStack(ModItems.MEMORY_TIER1.get());
-        final var eeprom = RobotMovementPersistenceGameTests.eeprom(program(fixture.version));
+        final var eeprom = RobotMovementPersistenceGameTests.eeprom(program(fixture));
         final boolean addon = Boolean.getBoolean("neoopencomputers.testApiSmokeAddon");
         final var card = addon ? AddonLifecycleGameTests.card("native-" + fixture.kind + "-" + fixture.version, false) : ItemStack.EMPTY;
         switch (fixture.kind) {
-            case "case", "charger" -> {
+            case "case", "charger", "block_adapter", "block_adapter_nodeless" -> {
                 level.setBlockAndUpdate(pos, ModBlocks.COMPUTER_CASE_TIER1.get().defaultBlockState());
                 final var host = (ComputerCaseBlockEntity) level.getBlockEntity(pos);
                 host.setItem(ComputerCaseBlockEntity.SLOT_CPU, cpu); host.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, ram);
@@ -135,6 +140,19 @@ public final class NativeHostsProcessRestartGameTests {
                     card.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
                     helper.assertTrue(charger.canPlaceItem(0, card), "Charger restart addon item rejected");
                     charger.setItem(0, card);
+                } else if (fixture.kind.startsWith("block_adapter")) {
+                    helper.assertTrue(level.isEmptyBlock(pos.east()) && level.isEmptyBlock(pos.east(2)), "Block adapter restart fixture needs empty companion space");
+                    level.setBlockAndUpdate(pos.east(2), Blocks.BARREL.defaultBlockState());
+                    AddonBlockLifecycleGameTests.name(helper, (BarrelBlockEntity) level.getBlockEntity(pos.east(2)), fixture.kind.endsWith("nodeless"), 1);
+                    level.setBlockAndUpdate(pos.east(), ModBlocks.ADAPTER.get().defaultBlockState());
+                    final var adapter = (AdapterBlockEntity) level.getBlockEntity(pos.east());
+                    adapter.onLoad(); adapter.refreshNeighbors();
+                    if (fixture.kind.endsWith("nodeless")) {
+                        final var data = card.get(DataComponents.CUSTOM_DATA).copyTag();
+                        data.putString("oc_api_smoke_block_control", AddonBlockLifecycleGameTests.blockId(pos.east(2), Direction.EAST));
+                        card.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+                        host.setItem(0, card);
+                    }
                 } else if (addon) host.setItem(0, card);
             }
             case "rack" -> {
@@ -200,14 +218,17 @@ public final class NativeHostsProcessRestartGameTests {
         throw new IllegalStateException("Host EEPROM missing");
     }
 
-    private static String program(String version) {
+    private static String program(Fixture fixture) {
+        final String version = fixture.version;
+        final String addonName = fixture.kind.equals("block_adapter_nodeless") ? "api_block_control"
+            : fixture.kind.equals("block_adapter") ? "api_block_lifecycle" : "api_lifecycle";
         return """
             assert(_VERSION == 'Lua %s' and computer.getArchitecture() == 'Lua %s', 'wrong native VM')
             local eeprom = component.proxy(component.list('eeprom')())
             assert(eeprom.getData() == '', 'unexpected reboot')
             local addon
             if %s then
-              addon=component.proxy(assert(component.list('api_lifecycle')(), 'addon missing'))
+              addon=component.proxy(assert(component.list('%s')(), 'addon missing'))
               assert(addon.getPhase()=='Initialized' and addon.setValue(731)==731, 'addon not initialized')
             end
             local retained = {value=731}; retained.self=retained
@@ -223,6 +244,6 @@ public final class NativeHostsProcessRestartGameTests {
             assert(alias==file and fs.read(alias,3)==string.char(0,255)..'z', 'open binary handle/offset lost'); fs.close(file)
             eeprom.setData('verified')
             while true do computer.pullSignal() end
-            """.formatted(version, version, Boolean.getBoolean("neoopencomputers.testApiSmokeAddon"), version, version);
+            """.formatted(version, version, Boolean.getBoolean("neoopencomputers.testApiSmokeAddon"), addonName, version, version);
     }
 }
