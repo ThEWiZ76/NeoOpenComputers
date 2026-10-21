@@ -362,6 +362,7 @@ public class AssemblerBlockEntity extends BlockEntity implements ManagedEnvironm
     @Override
     protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
+        items.clear();
         ContainerHelper.loadAllItems(tag, items, registries);
         pendingOutput = tag.contains(TAG_OUTPUT)
             ? ItemStack.OPTIONAL_CODEC.parse(registries.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), tag.get(TAG_OUTPUT)).result().orElse(ItemStack.EMPTY)

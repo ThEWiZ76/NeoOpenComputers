@@ -22,6 +22,7 @@ public class AssemblerMenu extends AbstractContainerMenu {
     public static final int STATE_IDLE = 0;
     public static final int STATE_READY = 1;
     public static final int STATE_BUSY = 2;
+    public static final int BUTTON_START = 0;
 
     private static final int PLAYER_INVENTORY_X = 8;
     private static final int PLAYER_INVENTORY_Y = 122;
@@ -81,6 +82,16 @@ public class AssemblerMenu extends AbstractContainerMenu {
 
     public int assemblyProgress() {
         return assemblerData.get(ASSEMBLER_PROGRESS_INDEX);
+    }
+
+    @Override
+    public boolean clickMenuButton(final Player player, final int id) {
+        if (id != BUTTON_START || player == null || player.containerMenu != this || !stillValid(player)) {
+            return false;
+        }
+        return assemblerInventory instanceof AssemblerBlockEntity assembler
+            && assembler.getLevel() != null && !assembler.getLevel().isClientSide
+            && assembler.start(player.getAbilities().instabuild);
     }
 
     @Override

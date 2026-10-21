@@ -2,6 +2,7 @@ package li.cil.oc.client;
 
 import li.cil.oc.common.menu.AssemblerMenu;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -9,10 +10,26 @@ import net.minecraft.world.entity.player.Inventory;
 import java.util.List;
 
 public class AssemblerScreen extends AbstractContainerScreen<AssemblerMenu> {
+    private Button startButton;
     public AssemblerScreen(final AssemblerMenu menu, final Inventory playerInventory, final Component title) {
         super(menu, playerInventory, title);
         imageHeight = 204;
         inventoryLabelY = imageHeight - 94;
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        startButton = addRenderableWidget(Button.builder(Component.translatable("gui.neoopencomputers.assembler.start"), button -> {
+            if (minecraft != null && minecraft.gameMode != null) {
+                minecraft.gameMode.handleInventoryButtonClick(menu.containerId, AssemblerMenu.BUTTON_START);
+            }
+        }).bounds(leftPos + 8, topPos + 17, 60, 18).build());
+        updateStartButton();
+    }
+
+    private void updateStartButton() {
+        if (startButton != null) startButton.active = menu.assemblyState() == AssemblerMenu.STATE_READY;
     }
 
     @Override
@@ -29,6 +46,7 @@ public class AssemblerScreen extends AbstractContainerScreen<AssemblerMenu> {
 
     @Override
     public void render(final GuiGraphics guiGraphics, final int mouseX, final int mouseY, final float partialTick) {
+        updateStartButton();
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderTooltip(guiGraphics, mouseX, mouseY);
