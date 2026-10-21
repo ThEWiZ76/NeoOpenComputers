@@ -1763,7 +1763,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
         ContainerHelper.loadAllItems(tag, items, registries);
         hardwareItems = NonNullList.withSize(MAX_HARDWARE_SLOT_COUNT, ItemStack.EMPTY);
         if (tag.contains(TAG_HARDWARE, Tag.TAG_LIST)) {
-            loadHardwareItems(tag.getList(TAG_HARDWARE, Tag.TAG_COMPOUND), hardwareItems);
+            loadHardwareItems(tag.getList(TAG_HARDWARE, Tag.TAG_COMPOUND), hardwareItems, registries);
         }
         notifyHardwareChanged(machine);
         machine.load(tag.getCompound(TAG_MACHINE));
@@ -1810,7 +1810,7 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
         machine.save(machineTag);
         tag.put(TAG_MACHINE, machineTag);
         ContainerHelper.saveAllItems(tag, items, registries);
-        tag.put(TAG_HARDWARE, saveHardwareItems(hardwareItems));
+        tag.put(TAG_HARDWARE, saveHardwareItems(hardwareItems, registries));
     }
 
     private void tickServer() {
@@ -2219,11 +2219,15 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
     }
 
     public static ListTag saveHardwareItems(final NonNullList<ItemStack> hardwareItems) {
+        return saveHardwareItems(hardwareItems, null);
+    }
+
+    public static ListTag saveHardwareItems(final NonNullList<ItemStack> hardwareItems, final HolderLookup.Provider registries) {
         final ListTag itemTags = new ListTag();
         for (int slot = 0; slot < hardwareItems.size(); slot++) {
             final ItemStack stack = hardwareItems.get(slot);
             if (!stack.isEmpty()) {
-                final CompoundTag stackTag = ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack)
+                final CompoundTag stackTag = ItemStack.OPTIONAL_CODEC.encodeStart(registries == null ? NbtOps.INSTANCE : registries.createSerializationContext(NbtOps.INSTANCE), stack)
                     .result()
                     .filter(CompoundTag.class::isInstance)
                     .map(CompoundTag.class::cast)
@@ -2236,13 +2240,17 @@ public class RobotBlockEntity extends BlockEntity implements Robot, li.cil.oc.co
     }
 
     public static void loadHardwareItems(final ListTag itemTags, final NonNullList<ItemStack> hardwareItems) {
+        loadHardwareItems(itemTags, hardwareItems, null);
+    }
+
+    public static void loadHardwareItems(final ListTag itemTags, final NonNullList<ItemStack> hardwareItems, final HolderLookup.Provider registries) {
         for (int index = 0; index < itemTags.size(); index++) {
             final CompoundTag stackTag = itemTags.getCompound(index);
             final int slot = stackTag.getByte("Slot") & 255;
             if (slot < 0 || slot >= hardwareItems.size()) {
                 continue;
             }
-            final ItemStack stack = ItemStack.OPTIONAL_CODEC.parse(NbtOps.INSTANCE, stackTag)
+            final ItemStack stack = ItemStack.OPTIONAL_CODEC.parse(registries == null ? NbtOps.INSTANCE : registries.createSerializationContext(NbtOps.INSTANCE), stackTag)
                 .result()
                 .orElse(ItemStack.EMPTY);
             hardwareItems.set(slot, stack);

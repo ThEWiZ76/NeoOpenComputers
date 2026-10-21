@@ -10,6 +10,7 @@ import li.cil.oc.common.blockentity.AssemblerBlockEntity;
 import li.cil.oc.common.blockentity.MicrocontrollerBlockEntity;
 import li.cil.oc.common.item.MicrocontrollerCaseItem;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -88,7 +89,7 @@ final class MicrocontrollerAssemblerTemplate implements AssemblerTemplate {
         }
         final ItemStack output = new ItemStack(blockItemForTier(tier));
         final CompoundTag blockEntityData = new CompoundTag();
-        saveItems(blockEntityData, placement.items());
+        saveItems(blockEntityData, placement.items(), assembler.getLevel() == null ? null : assembler.getLevel().registryAccess());
         BlockItem.setBlockEntityData(output, ModBlockEntities.MICROCONTROLLER.get(), blockEntityData);
         return output;
     }
@@ -236,12 +237,12 @@ final class MicrocontrollerAssemblerTemplate implements AssemblerTemplate {
         return ModBlocks.MICROCONTROLLER_TIER1.get().asItem();
     }
 
-    private static void saveItems(final CompoundTag tag, final NonNullList<ItemStack> items) {
+    private static void saveItems(final CompoundTag tag, final NonNullList<ItemStack> items, final HolderLookup.Provider registries) {
         final ListTag itemTags = new ListTag();
         for (int slot = 0; slot < items.size(); slot++) {
             final ItemStack stack = items.get(slot);
             if (!stack.isEmpty()) {
-                final CompoundTag stackTag = ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack)
+                final CompoundTag stackTag = ItemStack.OPTIONAL_CODEC.encodeStart(registries == null ? NbtOps.INSTANCE : registries.createSerializationContext(NbtOps.INSTANCE), stack)
                     .result()
                     .filter(CompoundTag.class::isInstance)
                     .map(CompoundTag.class::cast)

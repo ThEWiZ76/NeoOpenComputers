@@ -120,7 +120,7 @@ final class DroneAssemblerTemplate implements AssemblerTemplate {
         if (!placement.valid()) {
             return ItemStack.EMPTY;
         }
-        return ModItems.DRONE.get().assembleFromCase(assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE), placement.items().toArray(ItemStack[]::new));
+        return ModItems.DRONE.get().assembleFromCase(assembler.getLevel() == null ? null : assembler.getLevel().registryAccess(), assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE), placement.items().toArray(ItemStack[]::new));
     }
 
     @Override

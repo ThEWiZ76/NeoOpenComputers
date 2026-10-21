@@ -4,6 +4,7 @@ import li.cil.oc.api.internal.Tiered;
 import li.cil.oc.common.ModEntities;
 import li.cil.oc.common.entity.DroneEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -41,6 +42,10 @@ public class DroneItem extends Item implements Tiered {
     }
 
     public ItemStack assembleFromCase(final ItemStack caseStack, final ItemStack... components) {
+        return assembleFromCase(null, caseStack, components);
+    }
+
+    public ItemStack assembleFromCase(final HolderLookup.Provider registries, final ItemStack caseStack, final ItemStack... components) {
         final ItemStack stack = new ItemStack(this);
         final CompoundTag data = new CompoundTag();
         data.putInt(TIER_TAG, caseTier(caseStack));
@@ -53,7 +58,7 @@ public class DroneItem extends Item implements Tiered {
                 }
                 final CompoundTag entry = new CompoundTag();
                 entry.putByte(SLOT_TAG, (byte) slot);
-                entry.put(STACK_TAG, encodeStack(component));
+                entry.put(STACK_TAG, encodeStack(component, registries));
                 componentTags.add(entry);
             }
         }
@@ -92,11 +97,15 @@ public class DroneItem extends Item implements Tiered {
     }
 
     public List<ItemStack> componentStacks(final ItemStack stack) {
+        return componentStacks(stack, null);
+    }
+
+    public List<ItemStack> componentStacks(final ItemStack stack, final HolderLookup.Provider registries) {
         final List<ItemStack> result = new ArrayList<>();
         final ListTag components = components(stack);
         for (int index = 0; index < components.size(); index++) {
             final CompoundTag entry = components.getCompound(index);
-            final ItemStack component = decodeStack(entry.getCompound(STACK_TAG));
+            final ItemStack component = decodeStack(entry.getCompound(STACK_TAG), registries);
             if (!component.isEmpty()) {
                 result.add(component);
             }
@@ -147,16 +156,16 @@ public class DroneItem extends Item implements Tiered {
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
     }
 
-    private static CompoundTag encodeStack(final ItemStack stack) {
-        return ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack)
+    private static CompoundTag encodeStack(final ItemStack stack, final HolderLookup.Provider registries) {
+        return ItemStack.OPTIONAL_CODEC.encodeStart(registries == null ? NbtOps.INSTANCE : registries.createSerializationContext(NbtOps.INSTANCE), stack)
             .result()
             .filter(CompoundTag.class::isInstance)
             .map(CompoundTag.class::cast)
             .orElseGet(CompoundTag::new);
     }
 
-    private static ItemStack decodeStack(final CompoundTag tag) {
-        return ItemStack.OPTIONAL_CODEC.parse(NbtOps.INSTANCE, tag)
+    private static ItemStack decodeStack(final CompoundTag tag, final HolderLookup.Provider registries) {
+        return ItemStack.OPTIONAL_CODEC.parse(registries == null ? NbtOps.INSTANCE : registries.createSerializationContext(NbtOps.INSTANCE), tag)
             .result()
             .orElse(ItemStack.EMPTY);
     }

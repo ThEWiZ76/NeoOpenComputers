@@ -220,7 +220,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
             default -> li.cil.oc.common.ModItems.DRONE_CASE_TIER1.get();
         };
         final var droneItem = li.cil.oc.common.ModItems.DRONE.get();
-        final var packed = droneItem.assembleFromCase(new ItemStack(caseItem), hardware.toArray(ItemStack[]::new));
+        final var packed = droneItem.assembleFromCase(level().registryAccess(), new ItemStack(caseItem), hardware.toArray(ItemStack[]::new));
         droneItem.storeName(packed, name);
         if (machine.node() instanceof li.cil.oc.api.network.Connector connector) {
             droneItem.storeEnergy(packed, connector.localBuffer());
@@ -295,7 +295,7 @@ public class DroneEntity extends Entity implements Drone, Environment, Container
             if (machine.node() instanceof li.cil.oc.api.network.Connector connector) {
                 connector.changeBuffer(item.storedEnergy(stack, connector.localBuffer()) - connector.localBuffer());
             }
-            final var components = item.componentStacks(stack);
+            final var components = item.componentStacks(stack, level().registryAccess());
             components.sort(java.util.Comparator.comparingInt((ItemStack component) -> {
                 final var driver = Driver.driverFor(component, Drone.class);
                 return driver == null ? -1 : driver.tier(component);

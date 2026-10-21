@@ -533,7 +533,7 @@ public final class RobotMovementPersistenceGameTests {
             helper.assertTrue(placed, "Movement fixture cannot install " + part);
         }
         final CompoundTag tag = robot.saveWithFullMetadata(helper.getLevel().registryAccess());
-        tag.put(RobotBlockEntity.TAG_HARDWARE, RobotBlockEntity.saveHardwareItems(hardware));
+        tag.put(RobotBlockEntity.TAG_HARDWARE, RobotBlockEntity.saveHardwareItems(hardware, helper.getLevel().registryAccess()));
         robot.loadWithComponents(tag, helper.getLevel().registryAccess());
     }
 

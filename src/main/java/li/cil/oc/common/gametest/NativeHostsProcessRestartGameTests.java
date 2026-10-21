@@ -20,6 +20,9 @@ import li.cil.oc.common.item.ItemDriverData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.gametest.framework.GameTestGenerator;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.TestFunction;
@@ -126,6 +129,12 @@ public final class NativeHostsProcessRestartGameTests {
             .filter(type -> li.cil.oc.api.Machine.getArchitectureName(type).equals("Lua " + fixture.version)).findFirst().orElseThrow();
         ((MutableProcessor) Driver.driverFor(cpu)).setArchitecture(cpu, architecture);
         final var ram = new ItemStack(ModItems.MEMORY_TIER1.get());
+        if (List.of("robot", "drone", "microcontroller").contains(fixture.kind)) {
+            final var enchantments = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+            enchantments.set(level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.UNBREAKING), 1);
+            ram.set(DataComponents.ENCHANTMENTS, enchantments.toImmutable());
+            final var marker = new CompoundTag(); marker.putInt("retained", 42); ram.set(DataComponents.CUSTOM_DATA, CustomData.of(marker));
+        }
         final var eeprom = RobotMovementPersistenceGameTests.eeprom(program(fixture));
         final boolean addon = Boolean.getBoolean("neoopencomputers.testApiSmokeAddon");
         final var card = addon ? AddonLifecycleGameTests.card("native-" + fixture.kind + "-" + fixture.version, false) : ItemStack.EMPTY;
@@ -200,7 +209,7 @@ public final class NativeHostsProcessRestartGameTests {
             }
             case "drone" -> {
                 final var host = new DroneEntity(level); host.setUUID(fixture.droneId()); host.setPos(pos.getX() + .5, pos.getY(), pos.getZ() + .5);
-                host.loadFromItemStack(((DroneItem) ModItems.DRONE.get()).assembleFromCase(new ItemStack(ModItems.DRONE_CASE_TIER1.get()), addon ? new ItemStack[]{cpu, ram, eeprom, card} : new ItemStack[]{cpu, ram, eeprom}), null);
+                host.loadFromItemStack(((DroneItem) ModItems.DRONE.get()).assembleFromCase(level.registryAccess(), new ItemStack(ModItems.DRONE_CASE_TIER1.get()), addon ? new ItemStack[]{cpu, ram, eeprom, card} : new ItemStack[]{cpu, ram, eeprom}), null);
                 helper.assertTrue(level.addFreshEntity(host), "Drone spawn failed");
             }
             default -> throw new IllegalArgumentException(fixture.kind);
@@ -209,6 +218,17 @@ public final class NativeHostsProcessRestartGameTests {
 
     private static void continueProbe(GameTestHelper helper, Fixture fixture, boolean prepare) {
         final var host = loadedHost(helper.getLevel(), fixture);
+        if (List.of("robot", "drone", "microcontroller").contains(fixture.kind)) {
+            int memoryCount = 0;
+            for (var part : host.hardware) if (part.is(ModItems.MEMORY_TIER1.get())) {
+                memoryCount += part.getCount();
+                helper.assertTrue(part.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY)
+                    .getLevel(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.UNBREAKING)) == 1
+                    && part.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getInt("retained") == 42,
+                    "Native host lost registry-bound RAM metadata: " + fixture);
+            }
+            helper.assertTrue(memoryCount == 1, "Native host lost or duplicated registry-bound RAM: " + fixture);
+        }
         final var record = (Container) helper.getLevel().getBlockEntity(fixture.pos().south(2));
         helper.assertTrue(record != null, "Saved host record missing");
         if (prepare) {

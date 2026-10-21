@@ -68,7 +68,7 @@ final class RobotAssemblerTemplate implements AssemblerTemplate {
         final ItemStack output = new ItemStack(ModBlocks.ROBOT.get().asItem());
         final CompoundTag blockEntityData = new CompoundTag();
         blockEntityData.putInt(RobotBlockEntity.TAG_TIER, tier);
-        blockEntityData.put(RobotBlockEntity.TAG_HARDWARE, RobotBlockEntity.saveHardwareItems(placement.items()));
+        blockEntityData.put(RobotBlockEntity.TAG_HARDWARE, RobotBlockEntity.saveHardwareItems(placement.items(), assembler.getLevel() == null ? null : assembler.getLevel().registryAccess()));
         final String name = li.cil.oc.common.AgentNames.randomName();
         blockEntityData.putString("oc:name", name);
         output.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal(name));
