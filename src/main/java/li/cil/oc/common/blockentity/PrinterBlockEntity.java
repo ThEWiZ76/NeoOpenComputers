@@ -27,7 +27,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.Container;
+import net.minecraft.world.WorldlyContainer;
+import net.minecraft.world.Containers;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -43,7 +44,7 @@ import net.minecraft.world.phys.AABB;
 import java.util.EnumSet;
 import java.util.Map;
 
-public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironment, SidedEnvironment, EnvironmentHost, Container, DeviceInfo, StateAware, MenuProvider {
+public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironment, SidedEnvironment, EnvironmentHost, WorldlyContainer, DeviceInfo, StateAware, MenuProvider {
     public static final int SLOT_MATERIAL = 0;
     public static final int SLOT_INK = 1;
     public static final int SLOT_OUTPUT = 2;
@@ -437,10 +438,10 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
             return false;
         }
         if (slot == SLOT_MATERIAL) {
-            return PrintData.materialValue(stack) > 0 && MAX_MATERIAL - amountMaterial >= PrintData.materialValue(stack);
+            return PrintData.materialValue(stack) > 0;
         }
         if (slot == SLOT_INK) {
-            return PrintData.inkValue(stack) > 0 && MAX_INK - amountInk >= PrintData.inkValue(stack);
+            return PrintData.inkValue(stack) > 0;
         }
         return false;
     }
@@ -448,6 +449,21 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
     @Override
     public boolean stillValid(final Player player) {
         return li.cil.oc.common.inventory.BlockInventoryAccess.stillValid(this, player);
+    }
+
+    @Override
+    public int[] getSlotsForFace(final Direction side) {
+        return new int[]{SLOT_MATERIAL, SLOT_INK, SLOT_OUTPUT};
+    }
+
+    @Override
+    public boolean canPlaceItemThroughFace(final int slot, final ItemStack stack, final Direction side) {
+        return canPlaceItem(slot, stack);
+    }
+
+    @Override
+    public boolean canTakeItemThroughFace(final int slot, final ItemStack stack, final Direction side) {
+        return isValidSlot(slot) && !canPlaceItem(slot, stack);
     }
 
     @Override
@@ -550,6 +566,12 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
     @Override
     public void onDataPacket(final Connection net, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
         handleUpdateTag(packet.getTag(), registries);
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) Network.joinOrCreateNetwork(this);
     }
 
     @Override
@@ -680,6 +702,11 @@ public class PrinterBlockEntity extends BlockEntity implements ManagedEnvironmen
             final ItemStack removed = removeItem(SLOT_INK, 1);
             if (!removed.isEmpty()) {
                 amountInk += value;
+                final ItemStack remainder = removed.getCraftingRemainingItem();
+                if (!remainder.isEmpty()) {
+                    if (items.get(SLOT_INK).isEmpty()) setItem(SLOT_INK, remainder);
+                    else Containers.dropItemStack(level, worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D, worldPosition.getZ() + 0.5D, remainder);
+                }
                 setChanged();
             }
         }

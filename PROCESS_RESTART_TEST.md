@@ -124,3 +124,7 @@ Generic Slot.Floppy addon reproduces20 failures across block/rack owners. Restor
 ## Diskdrive actual client restart and GUI acceptance - 2026-10-21
 
 Actual clienta3d46f1d3: block/node and rack/no-node Slot.Floppy fixtures retain731 through full JVM restart67232->59376, same block node address. Each real DiskDriveScreen QUICK_MOVE delivers one732, reinsert732, then one733; source/cursor empty. Fresh cleanup blocks0/entitiesempty/no owned inventory. Details [[../03 manuals/API addon runtime]]. Client fixture does not claim native Lua/filesystem handles; server matrices cover those separately. Wider port gates open; temporary overnight authority until user return, beta3-6 concentrated workweeks low confidence.
+
+## Functional 3D printer parity and ordinary process restart - 2026-10-21
+
+Upstream semantic audit reproduces7 failures in12 printer tests. Repair cartridge/container conservation, full-buffer queuing, hopper/ItemHandler rules and existing-cable rejoin. Exact batch costs/full-output/edited-model controls pass.875 default/1100 mixed required +2240 units; distinct-JVM printer pair881/881 at45204->73344 preserves pending2/4/address/cartridge, completes once with final2 energy. Full save logs checked; first M disk-full run and C missing-template startup are invalid retained diagnostics. External isolated run-directory option routes all structures consistently. Details [[../03 manuals/API addon runtime]]. New source server-only; actual client workflow next. Broader release gates open; beta3-6 workweeks low confidence.

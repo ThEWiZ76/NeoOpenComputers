@@ -127,6 +127,9 @@ tasks.named('assemble').configure {
     dependsOn tasks.named('javadocJar')
 }
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+def gameTestRunDirectory = layout.dir(providers.provider {
+    file(findProperty('neoopencomputers.gameTestRunDirectory') ?: 'run/gameTestServer')
+}).get()
 runs {
     configureEach {
         systemProperty 'forge.logging.markers', 'REGISTRIES'
@@ -150,6 +153,11 @@ runs {
         argument '--nogui'
     }
     gameTestServer {
+        if (project.hasProperty('neoopencomputers.gameTestRunDirectory')
+            && !project.hasProperty('neoopencomputers.gameTestWorld') && !project.hasProperty('neoopencomputers.restartPhase')) {
+            throw new GradleException('An external GameTest run directory requires an isolated test or restart world.')
+        }
+        workingDirectory gameTestRunDirectory
         if (project.hasProperty('withApiSmokeAddon')) {
             systemProperty 'neoopencomputers.testApiSmokeAddon', 'true'
         }
@@ -226,6 +234,12 @@ runs {
             }
             systemProperty 'neoopencomputers.restartNativeHosts', 'true'
         }
+        if (project.hasProperty('neoopencomputers.restartPrinter')) {
+            if (!project.hasProperty('neoopencomputers.restartPhase')) {
+                throw new GradleException('Printer restart requires the isolated restart phase/world properties.')
+            }
+            systemProperty 'neoopencomputers.restartPrinter', 'true'
+        }
         if (project.hasProperty('neoopencomputers.restartComputerCraftMedia')) {
             if (!project.hasProperty('neoopencomputers.restartPhase') || !project.hasProperty('withComputerCraft')) {
                 throw new GradleException('CC media restart requires withComputerCraft and the ordinary isolated restart phase/world properties.')
@@ -251,13 +265,13 @@ runs {
 
 tasks.register('syncGameTestStructures', Sync) {
     def sourceDir = layout.projectDirectory.dir('gameteststructures')
-    def outputDir = layout.projectDirectory.dir('run/gameTestServer/gameteststructures')
+    def outputDir = gameTestRunDirectory.dir('gameteststructures')
     from sourceDir
     into outputDir
 }
 
 tasks.register('generateEmptyGameTestStructure') {
-    def emptyStructure = layout.projectDirectory.file('run/gameTestServer/gameteststructures/empty.snbt')
+    def emptyStructure = gameTestRunDirectory.file('gameteststructures/empty.snbt')
     outputs.file emptyStructure
     doLast {
         def output = emptyStructure.asFile
@@ -285,7 +299,7 @@ tasks.named('generateEmptyGameTestStructure') {
 }
 
 tasks.register('generateAe2ExportGameTestStructure') {
-    def structure = layout.projectDirectory.file('run/gameTestServer/gameteststructures/ae2_export.snbt')
+    def structure = gameTestRunDirectory.file('gameteststructures/ae2_export.snbt')
     outputs.file structure
     doLast {
         def output = structure.asFile
