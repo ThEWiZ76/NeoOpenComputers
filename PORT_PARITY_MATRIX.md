@@ -833,3 +833,7 @@ Additional open core requirement: missing casecreative/creative computer and rob
 ## Tablet registry-bound component preservation - 2026-10-21
 
 Actual physical assembly lost enchanted RAM before runtime creation; red916/one failure. Supply world registries across tablet assembly/runtime/editor/disassembly while preserving old overloads/template bridges. Exact tagged RAM/container/installed wireless-card recovery and both native Lua tablet handoff/eviction tests now cover registry-bound data. First corrected default916; final mixed1141/default916 +2240 units, observed exit0/full saves. Details [[../03 manuals/API addon runtime]]. Other nested codecs/worldless filesystem APIs and builtin/creative/combined-client work remain open; installed client stillb15a1bad1/PID45768. Beta3-6 workweeks low confidence.
+
+## Builtin server and navigation disassembly - 2026-10-21
+
+Five real tests reproduce five failures. Add builtin server paid-material/immediate-hardware split (all tiers, modern/legacy,17 tagged components, unreadable hardware blocks) and navigation original-map snapshot/recovery (dynamic metadata, one source unit, driver save, legacy map ID, corrupt snapshot). Preview stays read-only. Fixed921, final mixed1146/default921 +2240 units, original exit0/full saves. See [[../03 manuals/API addon runtime]]. Server/navigation part only: robot/drone/microcontroller, registry codecs, creative cases/input and combined actual-client acceptance remain open. Installed client remainsb15a1bad1/PID45768/default0.05. Beta3-6 workweeks low confidence.

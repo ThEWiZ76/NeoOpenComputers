@@ -37,7 +37,7 @@ public final class NavigationUpgradeRecipe extends ShapedRecipe {
         for (int i = 0; i < input.size(); i++) {
             final ItemStack ingredient = input.getItem(i);
             if (!ingredient.isEmpty() && ingredient.has(DataComponents.MAP_ID)) {
-                NavigationUpgradeItem.copyMapData(stack, ingredient, null);
+                NavigationUpgradeItem.copyMapData(stack, ingredient, null, registries);
                 break;
             }
         }

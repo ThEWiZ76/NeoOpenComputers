@@ -12,7 +12,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 public final class DisassemblerTemplates {
-    private static final List<DisassemblerTemplate> DEFAULT_TEMPLATES = List.of(new TabletDisassemblerTemplate());
+    private static final List<DisassemblerTemplate> DEFAULT_TEMPLATES = List.of(
+        new TabletDisassemblerTemplate(), new ServerDisassemblerTemplate(), new NavigationUpgradeDisassemblerTemplate());
     private static final CopyOnWriteArrayList<DisassemblerTemplate> CUSTOM_TEMPLATES = new CopyOnWriteArrayList<>();
 
     public static Optional<DisassemblerTemplate> select(final ItemStack stack) {
