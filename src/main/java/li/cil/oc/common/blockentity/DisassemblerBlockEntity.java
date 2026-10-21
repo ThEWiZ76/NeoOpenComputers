@@ -15,6 +15,7 @@ import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.OpenComputersApi;
 import li.cil.oc.common.menu.DisassemblerMenu;
 import li.cil.oc.common.template.DisassemblerTemplates;
+import li.cil.oc.common.template.DisassemblerIngredients;
 import li.cil.oc.common.util.DisassemblerWork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -80,11 +81,11 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     }
 
     public boolean canInsert(final ItemStack stack) {
-        return !stack.isEmpty() && items.get(SLOT_INPUT).isEmpty() && DisassemblerTemplates.select(stack).isPresent();
+        return !stack.isEmpty() && items.get(SLOT_INPUT).isEmpty() && supportsInput(stack);
     }
 
     public boolean canDisassemble() {
-        return queuedOutputs.isEmpty() && outputsFit(DisassemblerTemplates.disassemble(items.get(SLOT_INPUT)));
+        return queuedOutputs.isEmpty() && outputsFit(outputsFor(items.get(SLOT_INPUT)));
     }
 
     public boolean disassemble() {
@@ -92,7 +93,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
             return false;
         }
         final ItemStack input = items.get(SLOT_INPUT);
-        final ItemStack[] outputs = DisassemblerTemplates.disassemble(input);
+        final ItemStack[] outputs = outputsFor(input);
         if (!outputsFit(outputs)) {
             return false;
         }
@@ -117,9 +118,11 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     }
 
     public boolean disassemble(final RandomSource random, final double breakChance) {
-        if (!queuedOutputs.isEmpty() || DisassemblerTemplates.select(items.get(SLOT_INPUT)).isEmpty()) return false;
+        if (!queuedOutputs.isEmpty()) return false;
         final ItemStack input = items.get(SLOT_INPUT);
-        final ItemStack[] outputs = survivingOutputs(DisassemblerTemplates.disassemble(input), random, breakChance);
+        final ItemStack[] ingredients = outputsFor(input);
+        if (ingredients == null || ingredients.length == 0) return false;
+        final ItemStack[] outputs = survivingOutputs(ingredients, random, breakChance);
         if (!outputsFit(outputs) && outputs.length > 0 && !hasAdjacentInventory()) {
             return false;
         }
@@ -260,7 +263,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
 
     @Override
     public boolean canTakeItemThroughFace(final int slot, final ItemStack stack, final Direction side) {
-        return isValidSlot(slot) && (slot != SLOT_INPUT || DisassemblerTemplates.select(stack).isEmpty());
+        return isValidSlot(slot) && (slot != SLOT_INPUT || !supportsInput(stack));
     }
 
     @Override
@@ -520,6 +523,15 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
         final BlockEntity neighbor = level.getBlockEntity(target);
         if (neighbor instanceof WorldlyContainer sided) return new SidedInvWrapper(sided, face);
         return neighbor instanceof Container container ? new InvWrapper(container) : null;
+    }
+
+    private boolean supportsInput(final ItemStack stack) {
+        return DisassemblerTemplates.select(stack).isPresent() || DisassemblerIngredients.recover(level, stack).length > 0;
+    }
+
+    private ItemStack[] outputsFor(final ItemStack stack) {
+        final var template = DisassemblerTemplates.select(stack);
+        return template.isPresent() ? template.get().disassemble(stack) : DisassemblerIngredients.recover(level, stack);
     }
 
     private boolean outputsFit(final ItemStack[] outputs) {

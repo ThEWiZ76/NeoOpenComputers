@@ -16,17 +16,19 @@ public final class DisassemblerTemplates {
     private static final CopyOnWriteArrayList<DisassemblerTemplate> CUSTOM_TEMPLATES = new CopyOnWriteArrayList<>();
 
     public static Optional<DisassemblerTemplate> select(final ItemStack stack) {
-        if (stack.isEmpty()) {
-            return Optional.empty();
-        }
-        final var data = stack.get(DataComponents.CUSTOM_DATA);
-        if (data != null && data.copyTag().getBoolean("oc:undisassemblable")) return Optional.empty();
+        if (!isAllowed(stack)) return Optional.empty();
         for (DisassemblerTemplate template : templates()) {
             if (template.matches(stack)) {
                 return Optional.of(template);
             }
         }
         return Optional.empty();
+    }
+
+    public static boolean isAllowed(final ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        final var data = stack.get(DataComponents.CUSTOM_DATA);
+        return data == null || !data.copyTag().getBoolean("oc:undisassemblable");
     }
 
     public static ItemStack[] disassemble(final ItemStack stack) {

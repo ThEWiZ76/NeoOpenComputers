@@ -77,6 +77,8 @@ public final class ModSettings {
     public static final ModConfigSpec.IntValue DATA_CARD_HARD_LIMIT;
     public static final ModConfigSpec.DoubleValue DATA_CARD_TIMEOUT;
     public static final ModConfigSpec.DoubleValue DISASSEMBLER_BREAK_CHANCE;
+    public static final ModConfigSpec.BooleanValue DISASSEMBLE_ALL_THE_THINGS;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> DISASSEMBLER_INPUT_BLACKLIST;
     public static final ModConfigSpec.DoubleValue REDSTONE_DELAY;
     public static final ModConfigSpec.IntValue DISK_ACTIVITY_SOUND_DELAY;
     public static final ModConfigSpec.IntValue GEOLYZER_RANGE;
@@ -278,6 +280,13 @@ public final class ModSettings {
         DISASSEMBLER_BREAK_CHANCE = builder
             .comment("Chance for each disassembler output item to break. OpenComputers upstream default is 0.05.")
             .defineInRange("disassemblerBreakChance", 0.05D, 0D, 1D);
+        DISASSEMBLE_ALL_THE_THINGS = builder
+            .comment("Allow ordinary crafting-recipe disassembly of items not registered with the OpenComputers API. Upstream default is false.")
+            .define("disassembleAllTheThings", false);
+        DISASSEMBLER_INPUT_BLACKLIST = builder
+            .comment("Ignore disassembly recipes containing these input item/block registry IDs. Upstream default is minecraft:fire.")
+            .defineListAllowEmpty("disassemblerInputBlacklist", List.of("minecraft:fire"), value -> value instanceof String id
+                && net.minecraft.resources.ResourceLocation.tryParse(id) != null);
         REDSTONE_DELAY = builder
             .comment("Seconds redstone output changes pause the calling context. OpenComputers upstream default is 0.1.")
             .defineInRange("redstoneDelay", 0.1D, 0D, Double.MAX_VALUE);
@@ -1412,6 +1421,14 @@ public final class ModSettings {
 
     public static double disassemblerBreakChance() {
         return Math.max(0D, Math.min(1D, doubleValue(DISASSEMBLER_BREAK_CHANCE)));
+    }
+
+    public static boolean disassembleAllTheThings() {
+        return booleanValue(DISASSEMBLE_ALL_THE_THINGS);
+    }
+
+    public static List<String> disassemblerInputBlacklist() {
+        return stringListValue(DISASSEMBLER_INPUT_BLACKLIST);
     }
 
     public static int geolyzerRange() {
