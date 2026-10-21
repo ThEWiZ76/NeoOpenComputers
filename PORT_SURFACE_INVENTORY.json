@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "d71ca849f20f5893cdb5039cb8f4f86a802ab0b9",
+  "port_revision": "a3d46f1d31793df5705ac9ee1d5d6d11879a5998",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
@@ -775,11 +775,11 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 125
+              "line": 130
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
-              "line": 183
+              "line": 194
             }
           ]
         },
@@ -789,11 +789,11 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 130
+              "line": 135
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
-              "line": 188
+              "line": 199
             }
           ]
         },
@@ -803,11 +803,11 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 146
+              "line": 151
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
-              "line": 199
+              "line": 210
             }
           ]
         }
@@ -2844,11 +2844,11 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 125
+              "line": 130
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
-              "line": 183
+              "line": 194
             }
           ]
         },
@@ -2858,11 +2858,11 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 130
+              "line": 135
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
-              "line": 188
+              "line": 199
             }
           ]
         },
@@ -2872,11 +2872,11 @@
           "same_name_port_declarations": [
             {
               "path": "src/main/java/li/cil/oc/common/blockentity/DiskDriveBlockEntity.java",
-              "line": 146
+              "line": 151
             },
             {
               "path": "src/main/java/li/cil/oc/common/component/DiskDriveMountableEnvironment.java",
-              "line": 199
+              "line": 210
             }
           ]
         }
