@@ -1,6 +1,6 @@
 {
   "baseline_revision": "7d9eac5584e238a890a388a0f697c27c7391caa4",
-  "port_revision": "54c782542a0f7a348c8330ef173c58fcd8b94165",
+  "port_revision": "8037460a0fed872e2e7dfeb2671b1d4e2ad552bb",
   "limitations": "Lexical declared callback names only. Global name matches do not establish the right host, inheritance, registration, behavior, arguments, energy, events or tests. Missing names are review candidates, not confirmed defects. API path matches do not establish signatures or addon compatibility. Assets, recipes, config and live acceptance remain separate inventories.",
   "source_files": [
     {
