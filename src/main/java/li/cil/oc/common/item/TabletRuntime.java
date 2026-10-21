@@ -44,7 +44,7 @@ public final class TabletRuntime implements Tablet {
         this.stack = stack;
         this.player = player;
         world = player.level();
-        for (int slot = 1; slot < TabletItem.COMPONENT_SLOTS; slot++) components.add(item.getComponent(stack, slot));
+        for (int slot = 1; slot < TabletItem.COMPONENT_SLOTS; slot++) components.add(item.getComponent(stack, slot, world.registryAccess()));
         final CompoundTag saved = TabletItem.readData(stack).getCompound(RUNTIME_TAG);
         // The integrated screen bypasses the blacklist for installable screens.
         screen = new ScreenItemEnvironment(this, 1, saved.getCompound("screen"), null);
@@ -93,7 +93,7 @@ public final class TabletRuntime implements Tablet {
     private final class ExpansionInventory extends net.minecraft.world.SimpleContainer implements li.cil.oc.common.inventory.ComponentInventory {
         ExpansionInventory(ItemStack initial) { super(initial); }
         @Override public int getMaxStackSize() { return 1; }
-        @Override public boolean canPlaceItem(int slot, ItemStack candidate) { return li.cil.oc.common.menu.TabletMenu.acceptsExpansion(stack, candidate); }
+        @Override public boolean canPlaceItem(int slot, ItemStack candidate) { return li.cil.oc.common.menu.TabletMenu.acceptsExpansion(stack, candidate, world.registryAccess()); }
         @Override public void saveItemData(int slot) { if (slot == 0) machine.saveComponentData(getItem(slot)); }
         @Override public ItemStack removeItem(int slot, int amount) {
             if (amount > 0) saveItemData(slot);
@@ -159,7 +159,7 @@ public final class TabletRuntime implements Tablet {
         final CompoundTag tabletData = new CompoundTag();
         tablet.save(tabletData);
         saved.put("tablet", tabletData);
-        for (int slot = 1; slot < TabletItem.COMPONENT_SLOTS; slot++) item.setComponent(stack, slot, components.get(slot - 1));
+        for (int slot = 1; slot < TabletItem.COMPONENT_SLOTS; slot++) item.setComponent(stack, slot, components.get(slot - 1), world.registryAccess());
         final CompoundTag data = TabletItem.readData(stack);
         data.put(RUNTIME_TAG, saved);
         TabletItem.writeData(stack, data);

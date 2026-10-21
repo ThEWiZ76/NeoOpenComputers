@@ -7,6 +7,7 @@ import li.cil.oc.common.driver.ScreenItemDriver;
 import li.cil.oc.common.item.TabletItem;
 import li.cil.oc.common.item.TabletRuntime;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -39,19 +40,31 @@ public final class TabletMenu extends DiskDriveMenu {
     }
 
     public static String expansionType(ItemStack tablet) {
-        final ItemStack container = ((TabletItem) tablet.getItem()).getContainer(tablet);
+        return expansionType(tablet, null);
+    }
+
+    public static String expansionType(ItemStack tablet, HolderLookup.Provider registries) {
+        final ItemStack container = ((TabletItem) tablet.getItem()).getContainer(tablet, registries);
         final var driver = Driver.driverFor(container, TabletRuntime.class);
         return driver instanceof Container upgrade ? upgrade.providedSlot(container) : li.cil.oc.api.driver.item.Slot.None;
     }
 
     public static int expansionTier(ItemStack tablet) {
-        final ItemStack container = ((TabletItem) tablet.getItem()).getContainer(tablet);
+        return expansionTier(tablet, null);
+    }
+
+    public static int expansionTier(ItemStack tablet, HolderLookup.Provider registries) {
+        final ItemStack container = ((TabletItem) tablet.getItem()).getContainer(tablet, registries);
         final var driver = Driver.driverFor(container, TabletRuntime.class);
         return driver instanceof Container upgrade ? upgrade.providedTier(container) : -1;
     }
 
     public static boolean acceptsExpansion(ItemStack tablet, ItemStack candidate) {
-        return accepts(expansionType(tablet), expansionTier(tablet), candidate);
+        return acceptsExpansion(tablet, candidate, null);
+    }
+
+    public static boolean acceptsExpansion(ItemStack tablet, ItemStack candidate, HolderLookup.Provider registries) {
+        return accepts(expansionType(tablet, registries), expansionTier(tablet, registries), candidate);
     }
 
     private static boolean accepts(String type, int tier, ItemStack candidate) {

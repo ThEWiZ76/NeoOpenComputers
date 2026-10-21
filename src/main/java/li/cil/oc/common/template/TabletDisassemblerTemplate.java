@@ -3,6 +3,7 @@ package li.cil.oc.common.template;
 import li.cil.oc.common.ModItems;
 import li.cil.oc.common.item.TabletItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.HolderLookup;
 
 final class TabletDisassemblerTemplate implements DisassemblerTemplate {
     @Override
@@ -18,5 +19,10 @@ final class TabletDisassemblerTemplate implements DisassemblerTemplate {
     @Override
     public ItemStack[] disassemble(final ItemStack stack) {
         return ModItems.TABLET.get().disassembleToIngredients(stack);
+    }
+
+    @Override
+    public DisassemblyResult plan(final ItemStack stack, final ItemStack[] ingredients, final HolderLookup.Provider registries) {
+        return new DisassemblyResult(ModItems.TABLET.get().disassembleToIngredients(stack, registries), null);
     }
 }

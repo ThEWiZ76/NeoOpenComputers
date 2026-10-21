@@ -8,6 +8,10 @@ import li.cil.oc.common.ModItems;
 import li.cil.oc.common.item.ItemDriverData;
 import li.cil.oc.common.item.TabletRuntime;
 import li.cil.oc.common.machine.NativeLuaArchitecture;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
@@ -51,8 +55,13 @@ public final class TabletRuntimeGameTests {
         final ItemStack cpu = new ItemStack(ModItems.CPU_TIER1.get());
         ((MutableProcessor) Driver.driverFor(cpu)).setArchitecture(cpu, NativeLuaArchitecture.class);
         final var item = ModItems.TABLET.get();
-        final ItemStack stack = item.assembleFromCase(new ItemStack(ModItems.TABLET_CASE_TIER2.get()), ItemStack.EMPTY,
-            cpu, new ItemStack(ModItems.MEMORY_TIER2.get()), RobotMovementPersistenceGameTests.eeprom("""
+        final ItemStack memory = new ItemStack(ModItems.MEMORY_TIER2.get());
+        final var unbreaking = helper.getLevel().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.UNBREAKING);
+        final var enchantments = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        enchantments.set(unbreaking, 1);
+        memory.set(DataComponents.ENCHANTMENTS, enchantments.toImmutable());
+        final ItemStack stack = item.assembleFromCase(helper.getLevel().registryAccess(), new ItemStack(ModItems.TABLET_CASE_TIER2.get()), ItemStack.EMPTY,
+            cpu, memory, RobotMovementPersistenceGameTests.eeprom("""
                 local eeprom = component.proxy(component.list('eeprom')())
                 assert(eeprom.getData() == '', 'unexpected reboot')
                 local retained = {value = 731}
@@ -94,6 +103,10 @@ public final class TabletRuntimeGameTests {
                 helper.assertTrue(!old.machine().isRunning() && !old.machine().architecture().isInitialized(), "Disposed tablet retained a VM");
                 final ItemStack serialized = ItemStack.parseOptional(helper.getLevel().registryAccess(), (net.minecraft.nbt.CompoundTag) stack.save(helper.getLevel().registryAccess()));
                 runtime[0] = new TabletRuntime(serialized, player);
+                final var restoredMemory = item.getComponent(serialized, 2, helper.getLevel().registryAccess());
+                helper.assertTrue(restoredMemory.is(ModItems.MEMORY_TIER2.get())
+                    && restoredMemory.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(unbreaking) == 1,
+                    "Native tablet handoff discarded registry-bound RAM data");
                 helper.assertTrue(address.equals(runtime[0].machine().node().address()), "Tablet computer address changed");
                 helper.assertTrue(runtime[0].machine().node().network().node(address) == runtime[0].machine().node(), "Tablet computer address not indexed");
                 helper.assertTrue(screenAddress.equals(runtime[0].screen().node().address()), "Tablet screen address changed");

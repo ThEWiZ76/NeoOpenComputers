@@ -518,7 +518,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
         final ItemStack unit = stack.copyWithCount(1);
         final var template = DisassemblerTemplates.select(unit);
         if (template.isEmpty()) return new DisassemblyResult(DisassemblerIngredients.recover(level, unit), null);
-        final var result = template.get().plan(unit, DisassemblerIngredients.forTemplate(level, unit));
+        final var result = template.get().plan(unit, DisassemblerIngredients.forTemplate(level, unit), level == null ? null : level.registryAccess());
         return result == null ? DisassemblyResult.EMPTY : result;
     }
 

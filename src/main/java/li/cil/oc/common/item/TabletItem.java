@@ -14,6 +14,7 @@ import li.cil.oc.common.ModItems;
 import li.cil.oc.common.ModSettings;
 import li.cil.oc.common.component.TabletEnvironment;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -172,30 +173,38 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
     }
 
     public ItemStack assembleFromCase(final ItemStack caseStack, final ItemStack container, final ItemStack... components) {
+        return assembleFromCase(null, caseStack, container, components);
+    }
+
+    public ItemStack assembleFromCase(final HolderLookup.Provider registries, final ItemStack caseStack, final ItemStack container, final ItemStack... components) {
         final ItemStack stack = new ItemStack(this);
         setTier(stack, caseTier(caseStack));
-        setContainer(stack, container);
+        setContainer(stack, container, registries);
         final double maxCharge = ModSettings.tabletBuffer();
         setMaxCharge(stack, maxCharge);
         setCharge(stack, maxCharge);
-        setComponent(stack, 0, new ItemStack(ModItems.SCREEN_TIER1.get()));
+        setComponent(stack, 0, new ItemStack(ModItems.SCREEN_TIER1.get()), registries);
         if (components != null) {
             for (int index = 0; index < components.length && index + 1 < COMPONENT_SLOTS; index++) {
-                setComponent(stack, index + 1, components[index]);
+                setComponent(stack, index + 1, components[index], registries);
             }
         }
         return stack;
     }
 
     public ItemStack[] disassembleToIngredients(final ItemStack stack) {
+        return disassembleToIngredients(stack, null);
+    }
+
+    public ItemStack[] disassembleToIngredients(final ItemStack stack, final HolderLookup.Provider registries) {
         final ArrayList<ItemStack> ingredients = new ArrayList<>();
         ingredients.add(caseForTier(tier(stack)));
-        final ItemStack container = getContainer(stack);
+        final ItemStack container = getContainer(stack, registries);
         if (!container.isEmpty()) {
             ingredients.add(container);
         }
         for (int slot = 1; slot < COMPONENT_SLOTS; slot++) {
-            final ItemStack component = getComponent(stack, slot);
+            final ItemStack component = getComponent(stack, slot, registries);
             if (!component.isEmpty()) {
                 ingredients.add(component);
             }
@@ -317,8 +326,8 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
                     (id, inventory, viewer) -> new li.cil.oc.common.menu.TabletMenu(id, inventory, runtime), stack.getHoverName()),
                     data -> {
                         data.writeVarInt(li.cil.oc.common.menu.TabletMenu.inventorySlot(player.getInventory(), stack));
-                        data.writeUtf(li.cil.oc.common.menu.TabletMenu.expansionType(stack));
-                        data.writeVarInt(li.cil.oc.common.menu.TabletMenu.expansionTier(stack));
+                        data.writeUtf(li.cil.oc.common.menu.TabletMenu.expansionType(stack, player.level().registryAccess()));
+                        data.writeVarInt(li.cil.oc.common.menu.TabletMenu.expansionTier(stack, player.level().registryAccess()));
                     });
             }
         } else {
@@ -356,20 +365,32 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
     }
 
     public ItemStack getContainer(final ItemStack stack) {
-        return decodeStack(readData(stack).getCompound(CONTAINER_TAG));
+        return getContainer(stack, null);
+    }
+
+    public ItemStack getContainer(final ItemStack stack, final HolderLookup.Provider registries) {
+        return decodeStack(readData(stack).getCompound(CONTAINER_TAG), registries);
     }
 
     public void setContainer(final ItemStack stack, final ItemStack container) {
+        setContainer(stack, container, null);
+    }
+
+    public void setContainer(final ItemStack stack, final ItemStack container, final HolderLookup.Provider registries) {
         final CompoundTag data = readData(stack);
         if (container == null || container.isEmpty()) {
             data.remove(CONTAINER_TAG);
         } else {
-            data.put(CONTAINER_TAG, encodeStack(container));
+            data.put(CONTAINER_TAG, encodeStack(container, registries));
         }
         writeData(stack, data);
     }
 
     public ItemStack getComponent(final ItemStack stack, final int slot) {
+        return getComponent(stack, slot, null);
+    }
+
+    public ItemStack getComponent(final ItemStack stack, final int slot, final HolderLookup.Provider registries) {
         if (slot < 0 || slot >= COMPONENT_SLOTS) {
             return ItemStack.EMPTY;
         }
@@ -377,7 +398,7 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
         for (int index = 0; index < components.size(); index++) {
             final CompoundTag entry = components.getCompound(index);
             if (entry.getInt(SLOT_TAG) == slot) {
-                return decodeStack(entry.getCompound(STACK_TAG));
+                return decodeStack(entry.getCompound(STACK_TAG), registries);
             }
         }
         return ItemStack.EMPTY;
@@ -394,6 +415,10 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
     }
 
     public void setComponent(final ItemStack stack, final int slot, final ItemStack component) {
+        setComponent(stack, slot, component, null);
+    }
+
+    public void setComponent(final ItemStack stack, final int slot, final ItemStack component, final HolderLookup.Provider registries) {
         if (slot < 0 || slot >= COMPONENT_SLOTS) {
             return;
         }
@@ -409,7 +434,7 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
         if (component != null && !component.isEmpty()) {
             final CompoundTag entry = new CompoundTag();
             entry.putInt(SLOT_TAG, slot);
-            entry.put(STACK_TAG, encodeStack(component));
+            entry.put(STACK_TAG, encodeStack(component, registries));
             newComponents.add(entry);
         }
         if (newComponents.isEmpty()) {
@@ -441,8 +466,8 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
     }
 
-    private static CompoundTag encodeStack(final ItemStack stack) {
-        return ItemStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack)
+    private static CompoundTag encodeStack(final ItemStack stack, final HolderLookup.Provider registries) {
+        return ItemStack.OPTIONAL_CODEC.encodeStart(registries == null ? NbtOps.INSTANCE : registries.createSerializationContext(NbtOps.INSTANCE), stack)
             .result()
             .filter(tag -> tag instanceof CompoundTag)
             .map(tag -> (CompoundTag) tag)
@@ -450,10 +475,14 @@ public class TabletItem extends Item implements Chargeable, DriverItem {
     }
 
     private static ItemStack decodeStack(final CompoundTag tag) {
+        return decodeStack(tag, null);
+    }
+
+    private static ItemStack decodeStack(final CompoundTag tag, final HolderLookup.Provider registries) {
         if (tag == null || tag.isEmpty()) {
             return ItemStack.EMPTY;
         }
-        return ItemStack.OPTIONAL_CODEC.parse(NbtOps.INSTANCE, tag).result().orElse(ItemStack.EMPTY);
+        return ItemStack.OPTIONAL_CODEC.parse(registries == null ? NbtOps.INSTANCE : registries.createSerializationContext(NbtOps.INSTANCE), tag).result().orElse(ItemStack.EMPTY);
     }
 
     private static boolean isFilesystemComponent(final ItemStack stack) {

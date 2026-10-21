@@ -57,7 +57,7 @@ final class TabletAssemblerTemplate implements AssemblerTemplate {
         final ItemStack template = assembler.getItem(AssemblerBlockEntity.SLOT_TEMPLATE).copy();
         final ItemStack container = firstStoredStack(assembler, AssemblerBlockEntity.SLOT_CONTAINER_START, AssemblerBlockEntity.CONTAINER_SLOT_COUNT);
         final ItemStack[] components = componentStacks(assembler);
-        return ModItems.TABLET.get().assembleFromCase(template, container, components);
+        return ModItems.TABLET.get().assembleFromCase(assembler.getLevel() == null ? null : assembler.getLevel().registryAccess(), template, container, components);
     }
 
     @Override

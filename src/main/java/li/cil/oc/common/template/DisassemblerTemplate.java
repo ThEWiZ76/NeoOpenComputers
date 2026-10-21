@@ -1,6 +1,7 @@
 package li.cil.oc.common.template;
 
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.HolderLookup;
 
 public interface DisassemblerTemplate {
     String name();
@@ -11,5 +12,9 @@ public interface DisassemblerTemplate {
 
     default DisassemblyResult plan(ItemStack stack, ItemStack[] ingredients) {
         return new DisassemblyResult(disassemble(stack), null);
+    }
+
+    default DisassemblyResult plan(ItemStack stack, ItemStack[] ingredients, HolderLookup.Provider registries) {
+        return plan(stack, ingredients);
     }
 }
