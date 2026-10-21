@@ -46,6 +46,8 @@ public class ChargerMenu extends AbstractContainerMenu {
         final Slot slot = slots.get(index);
         if (slot != null && slot.hasItem()) {
             final boolean fromCharger = index < CHARGER_SLOT_COUNT;
+            if (fromCharger && !li.cil.oc.common.inventory.ComponentInventory.hasPotentialCapacity(
+                slot.getItem(), slots, CHARGER_SLOT_COUNT, TOTAL_SLOT_COUNT)) return ItemStack.EMPTY;
             // Finish the owned environment before copying its stack into the player inventory.
             final ItemStack stack = fromCharger ? chargerInventory.removeItemNoUpdate(index) : slot.getItem();
             moved = stack.copy();

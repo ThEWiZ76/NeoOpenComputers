@@ -199,7 +199,8 @@ public class RobotMenu extends TerminalMenu {
         if (slot != null && slot.hasItem()) {
             li.cil.oc.common.inventory.ComponentInventory.saveBeforeTransfer(slot);
             final boolean fromRuntime = index > RobotBlockEntity.TOOL_SLOT && index < RobotBlockEntity.CARGO_SLOT_START;
-            if (fromRuntime && !playerHasCapacityFor(slot.getItem())) return ItemStack.EMPTY;
+            if (fromRuntime && !li.cil.oc.common.inventory.ComponentInventory.hasPotentialCapacity(
+                slot.getItem(), slots, robotSlotCount, robotSlotCount + PLAYER_SLOT_COUNT)) return ItemStack.EMPTY;
             final ItemStack stack = fromRuntime ? robotInventory.removeItemNoUpdate(index) : slot.getItem();
             moved = stack.copy();
             if (index < robotSlotCount) {
@@ -220,18 +221,6 @@ public class RobotMenu extends TerminalMenu {
             }
         }
         return moved;
-    }
-
-    private boolean playerHasCapacityFor(final ItemStack stack) {
-        for (int index = robotSlotCount; index < robotSlotCount + PLAYER_SLOT_COUNT; index++) {
-            final Slot destination = slots.get(index);
-            final ItemStack existing = destination.getItem();
-            // Teardown can change component data. Rule out impossible destinations by type;
-            // moveItemStackTo checks the final data after the owned environment is detached.
-            if (existing.isEmpty() || ItemStack.isSameItem(existing, stack)
-                && existing.getCount() < Math.min(destination.getMaxStackSize(), existing.getMaxStackSize())) return true;
-        }
-        return false;
     }
 
     private boolean movePlayerStackToRobot(final ItemStack stack) {

@@ -15,6 +15,9 @@ import li.cil.oc.common.item.ItemDriverData;
 import li.cil.oc.common.machine.NativeLua53Architecture;
 import li.cil.oc.common.menu.ChargerMenu;
 import li.cil.oc.common.menu.RobotMenu;
+import li.cil.oc.common.menu.AdapterMenu;
+import li.cil.oc.common.menu.ComputerCaseMenu;
+import li.cil.oc.common.menu.ServerRackMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -28,12 +31,12 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +48,7 @@ public final class AddonLifecycleGameTests {
     @GameTestGenerator
     public static Collection<TestFunction> tests() {
         if (!Boolean.getBoolean("neoopencomputers.testApiSmokeAddon")) return List.of();
-        return List.of(new TestFunction("addonLifecycle", "addon_lifecycle_case_reload", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::caseReload),
+        final var tests = new ArrayList<>(List.of(new TestFunction("addonLifecycle", "addon_lifecycle_case_reload", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::caseReload),
             new TestFunction("addonLifecycle", "addon_lifecycle_nodeless_update_and_save", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::noNode),
             new TestFunction("addonLifecycle", "addon_lifecycle_rack_bus_and_removal", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::rack),
             new TestFunction("addonLifecycle", "addon_lifecycle_adapter_nodeless", "neoopencomputers:empty", 400, 0, true, AddonLifecycleGameTests::adapter),
@@ -57,7 +60,13 @@ public final class AddonLifecycleGameTests {
             new TestFunction("addonLifecycle", "addon_charger_quick_move_node", "neoopencomputers:empty", 100, 0, true, helper -> chargerQuickMove(helper, false, false)),
             new TestFunction("addonLifecycle", "addon_charger_quick_move_nodeless", "neoopencomputers:empty", 100, 0, true, helper -> chargerQuickMove(helper, true, false)),
             new TestFunction("addonLifecycle", "addon_charger_quick_move_full_inventory", "neoopencomputers:empty", 100, 0, true, helper -> chargerQuickMove(helper, false, true)),
-            new TestFunction("addonLifecycle", "addon_robot_quick_move_post_disposal_merge", "neoopencomputers:empty", 100, 0, true, AddonLifecycleGameTests::robotQuickMoveMerge));
+            new TestFunction("addonLifecycle", "addon_robot_quick_move_post_disposal_merge", "neoopencomputers:empty", 100, 0, true, AddonLifecycleGameTests::robotQuickMoveMerge)));
+        for (final var owner : List.of("case", "adapter", "server"))
+            for (final boolean noNode : List.of(false, true))
+                for (final var mode : List.of("direct", "quick", "full", "merge"))
+                    tests.add(new TestFunction("addonLifecycle", "addon_menu_" + owner + "_" + noNode + "_" + mode,
+                        "neoopencomputers:empty", 100, 0, true, helper -> ownerTransfer(helper, owner, noNode, mode)));
+        return tests;
     }
 
     static ItemStack card(String id, boolean noNode) {
@@ -256,7 +265,7 @@ public final class AddonLifecycleGameTests {
         final ChargerBlockEntity charger = helper.getBlockEntity(pos);
         final var stack = card(id, noNode);
         final var tag = stack.get(DataComponents.CUSTOM_DATA).copyTag();
-        tag.putBoolean("oc_api_smoke_tablet", true); tag.putBoolean("oc_api_smoke_dispose_increment", !full);
+        tag.putBoolean("oc_api_smoke_tablet", true); tag.putBoolean("oc_api_smoke_dispose_increment", true);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         charger.setItem(0, stack); initialized(helper, id);
         invoke("setTrackedValue", new Class<?>[]{String.class, int.class}, id, 731);
@@ -307,6 +316,70 @@ public final class AddonLifecycleGameTests {
         helper.assertTrue(!returned.isEmpty() && ItemDriverData.dataTag(returned).getInt("trackedValue") == 732
             && robot.getItem(1).isEmpty() && player.getInventory().getItem(8).getCount() == 64,
             "Robot shift-click failed to merge the final post-disposal state into a full inventory");
+        disposed(helper, id); helper.succeed();
+    }
+
+    private static void ownerTransfer(GameTestHelper helper, String owner, boolean noNode, String mode) {
+        final String id = "menu-" + owner + "-" + noNode + "-" + mode;
+        final var pos = new BlockPos(1, 1, 1);
+        final var player = helper.makeMockServerPlayerInLevel();
+        final Container items;
+        final net.minecraft.world.inventory.AbstractContainerMenu menu;
+        switch (owner) {
+            case "case" -> {
+                helper.setBlock(pos, ModBlocks.COMPUTER_CASE_TIER1.get());
+                items = helper.getBlockEntity(pos);
+                menu = new ComputerCaseMenu(51, player.getInventory(), items);
+            }
+            case "adapter" -> {
+                helper.setBlock(pos, ModBlocks.ADAPTER.get());
+                final AdapterBlockEntity adapter = helper.getBlockEntity(pos); adapter.onLoad(); items = adapter;
+                menu = new AdapterMenu(52, player.getInventory(), items);
+            }
+            case "server" -> {
+                helper.setBlock(pos, ModBlocks.RACK.get());
+                final RackBlockEntity rack = helper.getBlockEntity(pos); rack.setItem(0, new ItemStack(ModItems.SERVER_TIER1.get()));
+                items = (Container) rack.getMountable(0);
+                menu = new ServerRackMenu(53, player.getInventory(), items);
+            }
+            default -> throw new IllegalArgumentException(owner);
+        }
+        final var stack = card(id, noNode); final var tag = stack.get(DataComponents.CUSTOM_DATA).copyTag();
+        tag.putBoolean("oc_api_smoke_dispose_increment", true);
+        if (owner.equals("adapter")) tag.putBoolean("oc_api_smoke_upgrade", true);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        helper.assertTrue(items.canPlaceItem(0, stack), "Fixture rejected by actual owner");
+        items.setItem(0, stack); initialized(helper, id);
+        invoke("setTrackedValue", new Class<?>[]{String.class, int.class}, id, 731);
+        if (mode.equals("merge")) {
+            ((li.cil.oc.common.inventory.ComponentInventory) items).saveItemData(0);
+            final var expected = items.getItem(0).copy();
+            final var expectedTag = expected.get(DataComponents.CUSTOM_DATA).copyTag();
+            expectedTag.getCompound("oc:data").putInt("trackedValue", 732);
+            expected.set(DataComponents.CUSTOM_DATA, CustomData.of(expectedTag)); expected.setCount(63);
+            for (int slot = 0; slot < 36; slot++) player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
+            player.getInventory().setItem(8, expected);
+        }
+        if (mode.equals("full")) {
+            for (int slot = 0; slot < 36; slot++) player.getInventory().setItem(slot, new ItemStack(Items.STONE, 64));
+            helper.assertTrue(menu.quickMoveStack(player, 0).isEmpty() && items.getItem(0).getCount() == 1,
+                "Full inventory transfer lost installed item");
+            initialized(helper, id);
+            helper.assertTrue(((Number) observe(id).get("value")).intValue() == 731, "Refused transfer disposed the live component");
+            items.removeItemNoUpdate(0); disposed(helper, id); helper.succeed(); return;
+        }
+        final var returned = mode.equals("direct") ? items.removeItemNoUpdate(0) : menu.quickMoveStack(player, 0);
+        helper.assertTrue(ItemDriverData.dataTag(returned).getInt("trackedValue") == 732,
+            "Transfer returned stale pre-disposal component state");
+        helper.assertTrue(items.getItem(0).isEmpty(), "Transferred source item remained installed");
+        if (!mode.equals("direct")) {
+            final var delivered = player.getInventory().items.stream().filter(item -> item.is(Items.PAPER)
+                && item.get(DataComponents.CUSTOM_DATA) != null
+                && item.get(DataComponents.CUSTOM_DATA).copyTag().getString("oc_api_smoke_lifecycle_id").equals(id)).toList();
+            helper.assertTrue(delivered.size() == 1 && delivered.getFirst().getCount() == (mode.equals("merge") ? 64 : 1)
+                && ItemDriverData.dataTag(delivered.getFirst()).getInt("trackedValue") == 732,
+                "Player inventory received stale or duplicated component state");
+        }
         disposed(helper, id); helper.succeed();
     }
 

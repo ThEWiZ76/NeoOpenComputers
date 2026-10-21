@@ -103,10 +103,14 @@ public class ServerRackMenu extends AbstractContainerMenu {
                 return ItemStack.EMPTY;
             }
             li.cil.oc.common.inventory.ComponentInventory.saveBeforeTransfer(slot);
-            final ItemStack stack = slot.getItem();
+            final boolean fromServer = index < SERVER_SLOT_COUNT;
+            if (fromServer && !li.cil.oc.common.inventory.ComponentInventory.hasPotentialCapacity(
+                slot.getItem(), slots, SERVER_SLOT_COUNT, TOTAL_SLOT_COUNT)) return ItemStack.EMPTY;
+            final ItemStack stack = fromServer ? serverInventory.removeItemNoUpdate(index) : slot.getItem();
             moved = stack.copy();
-            if (index < SERVER_SLOT_COUNT) {
+            if (fromServer) {
                 if (!moveItemStackTo(stack, SERVER_SLOT_COUNT, TOTAL_SLOT_COUNT, true)) {
+                    serverInventory.setItem(index, stack);
                     return ItemStack.EMPTY;
                 }
             } else if (!moveItemStackTo(stack, 0, SERVER_SLOT_COUNT, false)) {
@@ -115,6 +119,8 @@ public class ServerRackMenu extends AbstractContainerMenu {
 
             if (stack.isEmpty()) {
                 slot.setByPlayer(ItemStack.EMPTY);
+            } else if (fromServer) {
+                slot.setByPlayer(stack);
             } else {
                 slot.setChanged();
             }

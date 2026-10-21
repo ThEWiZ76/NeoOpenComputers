@@ -56,10 +56,14 @@ public class AdapterMenu extends AbstractContainerMenu {
         final Slot slot = slots.get(index);
         if (slot != null && slot.hasItem()) {
             li.cil.oc.common.inventory.ComponentInventory.saveBeforeTransfer(slot);
-            final ItemStack stack = slot.getItem();
+            final boolean fromAdapter = index < ADAPTER_SLOT_COUNT;
+            if (fromAdapter && !li.cil.oc.common.inventory.ComponentInventory.hasPotentialCapacity(
+                slot.getItem(), slots, ADAPTER_SLOT_COUNT, TOTAL_SLOT_COUNT)) return ItemStack.EMPTY;
+            final ItemStack stack = fromAdapter ? adapterInventory.removeItemNoUpdate(index) : slot.getItem();
             moved = stack.copy();
-            if (index < ADAPTER_SLOT_COUNT) {
+            if (fromAdapter) {
                 if (!moveItemStackTo(stack, ADAPTER_SLOT_COUNT, TOTAL_SLOT_COUNT, true)) {
+                    adapterInventory.setItem(index, stack);
                     return ItemStack.EMPTY;
                 }
             } else if (!moveItemStackTo(stack, 0, ADAPTER_SLOT_COUNT, false)) {
@@ -68,6 +72,8 @@ public class AdapterMenu extends AbstractContainerMenu {
 
             if (stack.isEmpty()) {
                 slot.setByPlayer(ItemStack.EMPTY);
+            } else if (fromAdapter) {
+                slot.setByPlayer(stack);
             } else {
                 slot.setChanged();
             }

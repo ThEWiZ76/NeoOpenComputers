@@ -170,10 +170,14 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
         final Slot slot = slots.get(index);
         if (slot != null && slot.hasItem()) {
             li.cil.oc.common.inventory.ComponentInventory.saveBeforeTransfer(slot);
-            final ItemStack stack = slot.getItem();
+            final boolean fromComputer = index < computerSlotCount;
+            if (fromComputer && !li.cil.oc.common.inventory.ComponentInventory.hasPotentialCapacity(
+                slot.getItem(), slots, computerSlotCount, computerSlotCount + PLAYER_SLOT_COUNT)) return ItemStack.EMPTY;
+            final ItemStack stack = fromComputer ? computerInventory.removeItemNoUpdate(index) : slot.getItem();
             moved = stack.copy();
-            if (index < computerSlotCount) {
+            if (fromComputer) {
                 if (!moveItemStackTo(stack, computerSlotCount, computerSlotCount + PLAYER_SLOT_COUNT, true)) {
+                    computerInventory.setItem(index, stack);
                     return ItemStack.EMPTY;
                 }
             } else if (!moveItemStackTo(stack, 0, computerSlotCount, false)) {
@@ -182,6 +186,8 @@ public class ComputerCaseMenu extends AbstractContainerMenu {
 
             if (stack.isEmpty()) {
                 slot.setByPlayer(ItemStack.EMPTY);
+            } else if (fromComputer) {
+                slot.setByPlayer(stack);
             } else {
                 slot.setChanged();
             }
