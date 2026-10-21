@@ -795,3 +795,7 @@ Actual clientd71ca849f/PID58308: computer card/node, adapter upgrade/no-node and
 ## Generic diskdrive media ownership and persistence - 2026-10-21
 
 Generic Slot.Floppy addon reproduces20 failures across block/rack owners. Restore selected-tag load/fresh saves/Lifecycle and source-item binding; transfer final state, retain live unload snapshot; fix DiskDriveMenu extraction. Replace invalid Unsafe cleanup unit with stronger real-world node/late-save test. Final native1008/1008 distinct-JVM pair, mixed1072, CC media1017/1017 distinct-JVM pair, absent863;2240 units, all final terminal exit0. Details [[../03 manuals/API addon runtime]]. Latest source server-only; client remainsd71ca849f/PID58308 and needs core plus updated API fixture. Wider port gates open; beta3-6 concentrated workweeks low confidence.
+
+## Diskdrive actual client restart and GUI acceptance - 2026-10-21
+
+Actual clienta3d46f1d3: block/node and rack/no-node Slot.Floppy fixtures retain731 through full JVM restart67232->59376, same block node address. Each real DiskDriveScreen QUICK_MOVE delivers one732, reinsert732, then one733; source/cursor empty. Fresh cleanup blocks0/entitiesempty/no owned inventory. Details [[../03 manuals/API addon runtime]]. Client fixture does not claim native Lua/filesystem handles; server matrices cover those separately. Wider port gates open; temporary overnight authority until user return, beta3-6 concentrated workweeks low confidence.
