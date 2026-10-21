@@ -37,6 +37,11 @@ public final class ModCapabilities {
             (printer, side) -> new net.neoforged.neoforge.items.wrapper.SidedInvWrapper(printer,
                 side == null ? net.minecraft.core.Direction.DOWN : side));
         event.registerBlockEntity(
+            Capabilities.ItemHandler.BLOCK,
+            ModBlockEntities.DISASSEMBLER.get(),
+            (disassembler, side) -> new net.neoforged.neoforge.items.wrapper.SidedInvWrapper(disassembler,
+                side == null ? net.minecraft.core.Direction.DOWN : side));
+        event.registerBlockEntity(
             Capabilities.EnergyStorage.BLOCK,
             ModBlockEntities.POWER_CONVERTER.get(),
             PowerConverterBlockEntity::energyStorage);

@@ -29,6 +29,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.Containers;
+import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
@@ -38,12 +39,17 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.neoforged.neoforge.items.wrapper.InvWrapper;
+import net.neoforged.neoforge.items.wrapper.SidedInvWrapper;
 
 import java.util.ArrayDeque;
 import java.util.EnumSet;
 import java.util.Map;
 
-public class DisassemblerBlockEntity extends BlockEntity implements Environment, SidedEnvironment, Container, MenuProvider, DeviceInfo, StateAware {
+public class DisassemblerBlockEntity extends BlockEntity implements Environment, SidedEnvironment, WorldlyContainer, MenuProvider, DeviceInfo, StateAware {
     public static final int SLOT_INPUT = 0;
     public static final int SLOT_OUTPUT_START = 1;
     public static final int OUTPUT_SLOT_COUNT = 9;
@@ -78,16 +84,16 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     }
 
     public boolean canDisassemble() {
-        return outputsFit(DisassemblerTemplates.disassemble(items.get(SLOT_INPUT)));
+        return queuedOutputs.isEmpty() && outputsFit(DisassemblerTemplates.disassemble(items.get(SLOT_INPUT)));
     }
 
     public boolean disassemble() {
-        if (!canDisassemble()) {
+        if (!queuedOutputs.isEmpty()) {
             return false;
         }
         final ItemStack input = items.get(SLOT_INPUT);
         final ItemStack[] outputs = DisassemblerTemplates.disassemble(input);
-        if (outputs == null || outputs.length == 0) {
+        if (!outputsFit(outputs)) {
             return false;
         }
         queuedOutputs.clear();
@@ -111,6 +117,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     }
 
     public boolean disassemble(final RandomSource random, final double breakChance) {
+        if (!queuedOutputs.isEmpty() || DisassemblerTemplates.select(items.get(SLOT_INPUT)).isEmpty()) return false;
         final ItemStack input = items.get(SLOT_INPUT);
         final ItemStack[] outputs = survivingOutputs(DisassemblerTemplates.disassemble(input), random, breakChance);
         if (!outputsFit(outputs) && outputs.length > 0 && !hasAdjacentInventory()) {
@@ -242,6 +249,21 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     }
 
     @Override
+    public int[] getSlotsForFace(final Direction side) {
+        return java.util.stream.IntStream.range(0, CONTAINER_SIZE).toArray();
+    }
+
+    @Override
+    public boolean canPlaceItemThroughFace(final int slot, final ItemStack stack, final Direction side) {
+        return canPlaceItem(slot, stack);
+    }
+
+    @Override
+    public boolean canTakeItemThroughFace(final int slot, final ItemStack stack, final Direction side) {
+        return isValidSlot(slot) && (slot != SLOT_INPUT || DisassemblerTemplates.select(stack).isEmpty());
+    }
+
+    @Override
     public boolean stillValid(final Player player) {
         return li.cil.oc.common.inventory.BlockInventoryAccess.stillValid(this, player);
     }
@@ -345,6 +367,12 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     }
 
     @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level != null && !level.isClientSide) Network.joinOrCreateNetwork(this);
+    }
+
+    @Override
     public void onChunkUnloaded() {
         super.onChunkUnloaded();
         removeNode();
@@ -357,7 +385,12 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
     }
 
     private void tickDisassembly() {
-        if (queuedOutputs.isEmpty() || !(node() instanceof li.cil.oc.api.network.Connector connector)) {
+        if (queuedOutputs.isEmpty()) {
+            disassemble();
+            setActive(false);
+            return;
+        }
+        if (!(node() instanceof li.cil.oc.api.network.Connector connector)) {
             setActive(false);
             return;
         }
@@ -442,7 +475,7 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
             return false;
         }
         for (Direction direction : Direction.values()) {
-            if (level.getBlockEntity(worldPosition.relative(direction)) instanceof Container) {
+            if (adjacentInventory(direction) != null) {
                 return true;
             }
         }
@@ -455,9 +488,9 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
         }
         ItemStack remaining = stack;
         for (Direction direction : Direction.values()) {
-            final BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(direction));
-            if (blockEntity instanceof Container container) {
-                remaining = insertInto(container, remaining);
+            final IItemHandler inventory = adjacentInventory(direction);
+            if (inventory != null) {
+                remaining = ItemHandlerHelper.insertItemStacked(inventory, remaining, false);
                 if (remaining.isEmpty()) {
                     return ItemStack.EMPTY;
                 }
@@ -477,28 +510,16 @@ public class DisassemblerBlockEntity extends BlockEntity implements Environment,
         return remaining;
     }
 
-    private static ItemStack insertInto(final Container container, final ItemStack stack) {
-        ItemStack remaining = stack.copy();
-        for (int slot = 0; slot < container.getContainerSize(); slot++) {
-            if (remaining.isEmpty()) {
-                return ItemStack.EMPTY;
-            }
-            final ItemStack existing = container.getItem(slot);
-            if (existing.isEmpty()) {
-                final ItemStack inserted = remaining.copy();
-                inserted.setCount(Math.min(remaining.getCount(), Math.min(inserted.getMaxStackSize(), container.getMaxStackSize())));
-                if (container.canPlaceItem(slot, inserted)) {
-                    container.setItem(slot, inserted);
-                    remaining.shrink(inserted.getCount());
-                }
-            } else if (ItemStack.isSameItemSameComponents(existing, remaining) && existing.getCount() < Math.min(existing.getMaxStackSize(), container.getMaxStackSize())) {
-                final int transferable = Math.min(remaining.getCount(), Math.min(existing.getMaxStackSize(), container.getMaxStackSize()) - existing.getCount());
-                existing.grow(transferable);
-                container.setItem(slot, existing);
-                remaining.shrink(transferable);
-            }
-        }
-        return remaining;
+    private IItemHandler adjacentInventory(final Direction direction) {
+        if (level == null) return null;
+        final BlockPos target = worldPosition.relative(direction);
+        if (!level.isLoaded(target)) return null;
+        final Direction face = direction.getOpposite();
+        final IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, target, face);
+        if (handler != null) return handler;
+        final BlockEntity neighbor = level.getBlockEntity(target);
+        if (neighbor instanceof WorldlyContainer sided) return new SidedInvWrapper(sided, face);
+        return neighbor instanceof Container container ? new InvWrapper(container) : null;
     }
 
     private boolean outputsFit(final ItemStack[] outputs) {

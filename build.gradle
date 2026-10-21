@@ -240,6 +240,12 @@ runs {
             }
             systemProperty 'neoopencomputers.restartPrinter', 'true'
         }
+        if (project.hasProperty('neoopencomputers.restartDisassembler')) {
+            if (!project.hasProperty('neoopencomputers.restartPhase')) {
+                throw new GradleException('Disassembler restart requires the isolated restart phase/world properties.')
+            }
+            systemProperty 'neoopencomputers.restartDisassembler', 'true'
+        }
         if (project.hasProperty('neoopencomputers.restartComputerCraftMedia')) {
             if (!project.hasProperty('neoopencomputers.restartPhase') || !project.hasProperty('withComputerCraft')) {
                 throw new GradleException('CC media restart requires withComputerCraft and the ordinary isolated restart phase/world properties.')

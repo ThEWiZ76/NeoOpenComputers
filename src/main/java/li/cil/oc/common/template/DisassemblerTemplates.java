@@ -1,6 +1,7 @@
 package li.cil.oc.common.template;
 
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.component.DataComponents;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,6 +19,8 @@ public final class DisassemblerTemplates {
         if (stack.isEmpty()) {
             return Optional.empty();
         }
+        final var data = stack.get(DataComponents.CUSTOM_DATA);
+        if (data != null && data.copyTag().getBoolean("oc:undisassemblable")) return Optional.empty();
         for (DisassemblerTemplate template : templates()) {
             if (template.matches(stack)) {
                 return Optional.of(template);
