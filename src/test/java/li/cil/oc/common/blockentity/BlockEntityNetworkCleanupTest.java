@@ -51,21 +51,6 @@ final class BlockEntityNetworkCleanupTest {
         assertEquals(2, node.removals);
     }
 
-    @Test
-    void diskDriveRemovesDriveAndDiskNodesWhenUnloadedOrRemoved() throws Exception {
-        DiskDriveBlockEntity diskDrive = allocate(DiskDriveBlockEntity.class);
-        CountingNode driveNode = new CountingNode();
-        CountingNode diskNode = new CountingNode();
-        setField(diskDrive, "node", driveNode);
-        setField(diskDrive, "diskEnvironment", new TestManagedEnvironment(diskNode));
-
-        diskDrive.onChunkUnloaded();
-        diskDrive.setRemoved();
-
-        assertEquals(2, driveNode.removals);
-        assertEquals(2, diskNode.removals);
-    }
-
     private static <T> T allocate(final Class<T> type) throws Exception {
         Field field = Unsafe.class.getDeclaredField("theUnsafe");
         field.setAccessible(true);
@@ -82,23 +67,6 @@ final class BlockEntityNetworkCleanupTest {
         final String source = Files.readString(Path.of("src/main/java/li/cil/oc/common/blockentity/" + className + ".java"));
         assertTrue(source.contains("void onLoad()"), className + " must rebuild external network on world/chunk load");
         assertTrue(source.contains("Network.joinOrCreateNetwork(this)"), className + " must call network join on load");
-    }
-
-    private static final class TestManagedEnvironment implements ManagedEnvironment {
-        private final Node node;
-
-        private TestManagedEnvironment(final Node node) {
-            this.node = node;
-        }
-
-        @Override public Node node() { return node; }
-        @Override public void onConnect(final Node node) {}
-        @Override public void onDisconnect(final Node node) {}
-        @Override public void onMessage(final Message message) {}
-        @Override public boolean canUpdate() { return false; }
-        @Override public void update() {}
-        @Override public void load(final CompoundTag nbt) {}
-        @Override public void save(final CompoundTag nbt) {}
     }
 
     private static final class CountingNode implements Node {

@@ -99,6 +99,7 @@ public final class ApiSmokeAddon {
         @Override
         public String slot(ItemStack stack) {
             final var data = stack.get(DataComponents.CUSTOM_DATA);
+            if (data != null && data.copyTag().getBoolean("oc_api_smoke_floppy")) return Slot.Floppy;
             if (data != null && data.copyTag().getBoolean("oc_api_smoke_tablet")) return Slot.Tablet;
             return data != null && data.copyTag().getBoolean("oc_api_smoke_upgrade") ? Slot.Upgrade : Slot.Card;
         }

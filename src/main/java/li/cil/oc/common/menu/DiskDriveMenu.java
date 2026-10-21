@@ -55,10 +55,14 @@ public class DiskDriveMenu extends AbstractContainerMenu {
         final Slot slot = slots.get(index);
         if (slot != null && slot.hasItem()) {
             li.cil.oc.common.inventory.ComponentInventory.saveBeforeTransfer(slot);
-            final ItemStack stack = slot.getItem();
+            final boolean fromDrive = index < DRIVE_SLOT_COUNT;
+            if (fromDrive && !li.cil.oc.common.inventory.ComponentInventory.hasPotentialCapacity(
+                slot.getItem(), slots, DRIVE_SLOT_COUNT, TOTAL_SLOT_COUNT)) return ItemStack.EMPTY;
+            final ItemStack stack = fromDrive ? diskInventory.removeItemNoUpdate(index) : slot.getItem();
             moved = stack.copy();
-            if (index < DRIVE_SLOT_COUNT) {
+            if (fromDrive) {
                 if (!moveItemStackTo(stack, DRIVE_SLOT_COUNT, TOTAL_SLOT_COUNT, true)) {
+                    diskInventory.setItem(index, stack);
                     return ItemStack.EMPTY;
                 }
             } else if (!moveItemStackTo(stack, 0, DRIVE_SLOT_COUNT, false)) {
@@ -67,6 +71,8 @@ public class DiskDriveMenu extends AbstractContainerMenu {
 
             if (stack.isEmpty()) {
                 slot.setByPlayer(ItemStack.EMPTY);
+            } else if (fromDrive) {
+                slot.setByPlayer(stack);
             } else {
                 slot.setChanged();
             }

@@ -33,11 +33,11 @@ public final class AddonItemSaveContractGameTests {
     public static Collection<TestFunction> tests() {
         if (!Boolean.getBoolean("neoopencomputers.testApiSmokeAddon")) return List.of();
         final var tests = new ArrayList<TestFunction>();
-        for (final var owner : List.of("case", "robot", "adapter", "charger"))
+        for (final var owner : List.of("case", "robot", "adapter", "charger", "disk", "rackdisk"))
             for (final var mode : List.of("default", "null", "custom"))
                 tests.add(new TestFunction("addonItemSave", "addon_cleared_item_tag_" + owner + "_" + mode,
                     "neoopencomputers:empty", 100, 0, true, helper -> run(helper, owner, mode)));
-        for (final var owner : List.of("case", "robot", "adapter", "charger"))
+        for (final var owner : List.of("case", "robot", "adapter", "charger", "disk", "rackdisk"))
             for (final var failure : List.of("load_exception", "save_exception", "load_linkage", "save_linkage"))
                 tests.add(new TestFunction("addonItemSave", "addon_item_error_" + owner + "_" + failure,
                     "neoopencomputers:empty", 100, 0, true, helper -> runFailure(helper, owner, failure)));
@@ -53,6 +53,7 @@ public final class AddonItemSaveContractGameTests {
         root.putBoolean("oc_api_smoke", true);
         root.putBoolean("oc_api_smoke_upgrade", owner.equals("robot") || owner.equals("adapter"));
         root.putBoolean("oc_api_smoke_tablet", owner.equals("charger"));
+        root.putBoolean("oc_api_smoke_floppy", owner.endsWith("disk"));
         root.putString("oc_api_smoke_lifecycle_id", id);
         root.putString("oc_api_smoke_failure", failure);
         root.putString("saveContractSibling", "retained");
@@ -90,6 +91,7 @@ public final class AddonItemSaveContractGameTests {
         root.putBoolean("oc_api_smoke_custom_tag", mode.equals("custom"));
         root.putBoolean("oc_api_smoke_upgrade", owner.equals("robot") || owner.equals("adapter"));
         root.putBoolean("oc_api_smoke_tablet", owner.equals("charger"));
+        root.putBoolean("oc_api_smoke_floppy", owner.endsWith("disk"));
         root.putString("saveContractSibling", "retained");
         final var state = new CompoundTag(); state.putInt("count", 731); state.putInt("obsolete", 42);
         root.put(mode.equals("custom") ? "apiSmokeData" : "oc:data", state);
@@ -122,6 +124,18 @@ public final class AddonItemSaveContractGameTests {
     private static Fixture fixture(final GameTestHelper helper, final String owner) {
         final var pos = new BlockPos(1, 1, 1);
         return switch (owner) {
+            case "disk" -> {
+                helper.setBlock(pos, ModBlocks.DISK_DRIVE.get());
+                final li.cil.oc.common.blockentity.DiskDriveBlockEntity drive = helper.getBlockEntity(pos);
+                yield new Fixture(drive, 0, () -> drive.save(new CompoundTag()));
+            }
+            case "rackdisk" -> {
+                helper.setBlock(pos, ModBlocks.RACK.get());
+                final li.cil.oc.common.blockentity.RackBlockEntity rack = helper.getBlockEntity(pos);
+                rack.setItem(0, new ItemStack(ModItems.DISK_DRIVE_MOUNTABLE.get()));
+                final var drive = (li.cil.oc.common.component.DiskDriveMountableEnvironment) rack.getMountable(0);
+                yield new Fixture(drive, 0, () -> drive.save(new CompoundTag()));
+            }
             case "case" -> {
                 helper.setBlock(pos, ModBlocks.COMPUTER_CASE_TIER1.get());
                 final ComputerCaseBlockEntity computer = helper.getBlockEntity(pos);

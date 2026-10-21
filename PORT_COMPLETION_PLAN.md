@@ -763,3 +763,7 @@ Actual addon24 case/adapter/server node/no-node transfer cases plus stronger cha
 ## Component menu actual client acceptance - 2026-10-21
 
 Actual clientd71ca849f/PID58308: computer card/node, adapter upgrade/no-node and rackserver card/node each deliver one732, reinsert732, then deliver733 by real GUI QUICK_MOVE; computer/server addresses retained. Guarded cleanup three blocks0/entitiesempty/no owned inventory. Full/merge variants stay server938/862+2241-unit evidence. Fixture NBT/sync corrections documented in [[../03 manuals/API addon runtime]]. Wider port gates open; overnight permission until user return, beta3-6 concentrated workweeks low confidence.
+
+## Generic diskdrive media ownership and persistence - 2026-10-21
+
+Generic Slot.Floppy addon reproduces20 failures across block/rack owners. Restore selected-tag load/fresh saves/Lifecycle and source-item binding; transfer final state, retain live unload snapshot; fix DiskDriveMenu extraction. Replace invalid Unsafe cleanup unit with stronger real-world node/late-save test. Final native1008/1008 distinct-JVM pair, mixed1072, CC media1017/1017 distinct-JVM pair, absent863;2240 units, all final terminal exit0. Details [[../03 manuals/API addon runtime]]. Latest source server-only; client remainsd71ca849f/PID58308 and needs core plus updated API fixture. Wider port gates open; beta3-6 concentrated workweeks low confidence.

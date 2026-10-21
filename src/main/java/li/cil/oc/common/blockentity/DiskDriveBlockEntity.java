@@ -17,6 +17,9 @@ import li.cil.oc.api.network.Analyzable;
 import li.cil.oc.common.ModBlockEntities;
 import li.cil.oc.common.ModSounds;
 import li.cil.oc.common.OpenComputersApi;
+import li.cil.oc.common.item.ItemDriverData;
+import li.cil.oc.common.inventory.ComponentLifecycle;
+import li.cil.oc.api.util.Lifecycle.LifecycleState;
 import li.cil.oc.common.block.DiskDriveBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -61,6 +64,8 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
     private Node node;
     private ManagedEnvironment diskEnvironment;
+    private DriverItem diskDriver;
+    private ItemStack diskStack = ItemStack.EMPTY;
     private CompoundTag pendingDiskState;
     private long lastAccess;
 
@@ -210,7 +215,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
 
     @Override
     public ItemStack removeItem(final int slot, final int amount) {
-        if (slot == SLOT_FLOPPY && amount > 0) saveDiskToItem();
+        if (slot == SLOT_FLOPPY && amount > 0) { saveDiskToItem(); removeDiskEnvironment(false); }
         final ItemStack removed = ContainerHelper.removeItem(items, slot, amount);
         if (!removed.isEmpty()) {
             setChanged();
@@ -223,7 +228,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
 
     @Override
     public ItemStack removeItemNoUpdate(final int slot) {
-        if (slot == SLOT_FLOPPY) saveDiskToItem();
+        if (slot == SLOT_FLOPPY) { saveDiskToItem(); removeDiskEnvironment(false); }
         final ItemStack removed = ContainerHelper.takeItem(items, slot);
         if (!removed.isEmpty()) {
             refreshDiskEnvironment();
@@ -288,7 +293,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
             node().load(nbt.getCompound(TAG_NODE));
         }
         if (nbt.contains(TAG_DISK) && diskEnvironment != null) {
-            diskEnvironment.load(nbt.getCompound(TAG_DISK));
+            ItemDriverData.loadEnvironment(diskDriver, diskStack, diskEnvironment, nbt.getCompound(TAG_DISK));
         }
     }
 
@@ -307,9 +312,8 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
             nbt.put(TAG_NODE, nodeTag);
         }
         if (diskEnvironment != null) {
-            final CompoundTag diskTag = new CompoundTag();
-            diskEnvironment.save(diskTag);
-            nbt.put(TAG_DISK, diskTag);
+            saveDiskToItem();
+            nbt.put(TAG_DISK, ItemDriverData.driverDataTag(diskDriver, diskStack).copy());
         } else if (pendingDiskState != null && pendingDiskState.contains(TAG_DISK)) {
             nbt.put(TAG_DISK, pendingDiskState.getCompound(TAG_DISK).copy());
         }
@@ -379,7 +383,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
 
     private void saveDiskToItem() {
         // Save while the original stack is still present, before split/take copies its item data.
-        if (diskEnvironment != null) diskEnvironment.save(new CompoundTag());
+        if (diskEnvironment != null) ItemDriverData.saveEnvironment(diskDriver, diskStack, diskEnvironment);
         else if (pendingDiskState != null && pendingDiskState.contains(TAG_DISK)) {
             final var stack = items.get(SLOT_FLOPPY);
             final var driver = Driver.driverFor(stack);
@@ -393,18 +397,24 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     }
 
     private void refreshDiskEnvironment(final CompoundTag savedState) {
+        removeDiskEnvironment(false);
         pendingDiskState = savedState == null ? null : savedState.copy();
-        if (diskEnvironment != null && diskEnvironment.node() != null) {
-            diskEnvironment.node().remove();
-        }
-        diskEnvironment = null;
+        if (level == null || level.isClientSide) return;
+        if (savedState != null && savedState.contains(TAG_NODE)) node().load(savedState.getCompound(TAG_NODE));
         final ItemStack stack = items.get(SLOT_FLOPPY);
         final DriverItem driver = Driver.driverFor(stack);
         try {
             if (driver != null && acceptsDriverSlot(driver.slot(stack))) diskEnvironment = driver.createEnvironment(stack, this);
             // Restore addresses and open files before publishing nodes to the network.
-            if (savedState != null) load(savedState);
+            if (diskEnvironment != null) {
+                diskDriver = driver; diskStack = stack;
+                ComponentLifecycle.setState(diskEnvironment, LifecycleState.Constructing);
+                ItemDriverData.loadEnvironment(driver, stack, diskEnvironment,
+                    savedState != null && savedState.contains(TAG_DISK) ? savedState.getCompound(TAG_DISK) : null);
+                ComponentLifecycle.setState(diskEnvironment, LifecycleState.Initializing);
+            }
             connectDiskEnvironment();
+            ComponentLifecycle.setState(diskEnvironment, LifecycleState.Initialized);
             if (diskEnvironment != null || stack.isEmpty()) pendingDiskState = null;
         } catch (java.io.UncheckedIOException | IllegalArgumentException failure) {
             if (diskEnvironment != null && diskEnvironment.node() != null) {
@@ -412,6 +422,7 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
                 if (diskEnvironment.node().host() instanceof li.cil.oc.common.FileSystemEnvironment fs) fs.fileSystem().close();
             }
             diskEnvironment = null;
+            diskDriver = null; diskStack = ItemStack.EMPTY;
             li.cil.oc.NeoOpenComputers.LOGGER.warn("Cannot restore disk-drive media at {}; snapshot retained", worldPosition, failure);
         }
     }
@@ -477,11 +488,23 @@ public class DiskDriveBlockEntity extends BlockEntity implements ManagedEnvironm
     }
 
     private void removeNodes() {
-        if (diskEnvironment != null && diskEnvironment.node() != null) {
-            diskEnvironment.node().remove();
+        if (diskEnvironment != null) {
+            final var snapshot = new CompoundTag(); save(snapshot); pendingDiskState = snapshot;
+            removeDiskEnvironment(true);
         }
         if (node != null) {
             node.remove();
         }
+    }
+
+    private void removeDiskEnvironment(final boolean unloading) {
+        if (diskEnvironment == null) return;
+        saveDiskToItem(); // Reject failed durable writes while the live environment is still attached.
+        final var previous = diskEnvironment; final var driver = diskDriver; final var stack = diskStack;
+        diskEnvironment = null; diskDriver = null; diskStack = ItemStack.EMPTY;
+        ComponentLifecycle.setState(previous, LifecycleState.Disposing);
+        if (previous.node() != null) previous.node().remove();
+        if (!unloading) ItemDriverData.saveEnvironment(driver, stack, previous);
+        ComponentLifecycle.setState(previous, LifecycleState.Disposed);
     }
 }

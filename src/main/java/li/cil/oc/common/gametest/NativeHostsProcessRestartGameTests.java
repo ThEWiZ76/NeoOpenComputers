@@ -45,7 +45,11 @@ import java.util.UUID;
 @GameTestHolder(NeoOpenComputers.MODID)
 public final class NativeHostsProcessRestartGameTests {
     private record Fixture(String kind, String version, int index) {
-        BlockPos pos() { return new BlockPos(512 + index * 16, 80, 512); }
+        BlockPos pos() {
+            // Expanded addon fixtures use a separate region from the API probes at x768/784,z512.
+            final boolean addon = List.of("charger", "block_adapter", "block_adapter_nodeless", "diskdrive", "rackdrive").contains(kind);
+            return new BlockPos((addon ? 2048 : 512) + index * 16, 80, addon ? 2048 : 512);
+        }
         UUID droneId() { return new UUID(0x4f435f4e41544956L, 100 + index); }
     }
     private record Host(Machine machine, Iterable<ItemStack> hardware) { }
@@ -56,7 +60,7 @@ public final class NativeHostsProcessRestartGameTests {
                 result.add(new Fixture(kind, version, result.size()));
         if (Boolean.getBoolean("neoopencomputers.testApiSmokeAddon"))
             for (final var version : List.of("5.3", "5.4"))
-                for (final var kind : List.of("charger", "block_adapter", "block_adapter_nodeless"))
+                for (final var kind : List.of("charger", "block_adapter", "block_adapter_nodeless", "diskdrive", "rackdrive"))
                     result.add(new Fixture(kind, version, result.size()));
         return result;
     }
@@ -126,12 +130,18 @@ public final class NativeHostsProcessRestartGameTests {
         final boolean addon = Boolean.getBoolean("neoopencomputers.testApiSmokeAddon");
         final var card = addon ? AddonLifecycleGameTests.card("native-" + fixture.kind + "-" + fixture.version, false) : ItemStack.EMPTY;
         switch (fixture.kind) {
-            case "case", "charger", "charger_hdd", "charger_floppy", "block_adapter", "block_adapter_nodeless" -> {
+            case "case", "charger", "charger_hdd", "charger_floppy", "block_adapter", "block_adapter_nodeless", "diskdrive" -> {
                 level.setBlockAndUpdate(pos, ModBlocks.COMPUTER_CASE_TIER1.get().defaultBlockState());
                 final var host = (ComputerCaseBlockEntity) level.getBlockEntity(pos);
                 host.setItem(ComputerCaseBlockEntity.SLOT_CPU, cpu); host.setItem(ComputerCaseBlockEntity.SLOT_MEMORY_0, ram);
                 host.setItem(ComputerCaseBlockEntity.SLOT_EEPROM, eeprom);
-                if (fixture.kind.startsWith("charger_")) {
+                if (fixture.kind.equals("diskdrive")) {
+                    helper.assertTrue(level.isEmptyBlock(pos.east()), "Disk restart fixture needs empty companion space");
+                    level.setBlockAndUpdate(pos.east(), ModBlocks.DISK_DRIVE.get().defaultBlockState());
+                    final var data = card.get(DataComponents.CUSTOM_DATA).copyTag(); data.putBoolean("oc_api_smoke_floppy", true);
+                    card.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+                    ((li.cil.oc.common.blockentity.DiskDriveBlockEntity) level.getBlockEntity(pos.east())).setItem(0, card);
+                } else if (fixture.kind.startsWith("charger_")) {
                     helper.assertTrue(level.isEmptyBlock(pos.east()), "Tablet filesystem restart fixture needs empty companion space");
                     level.setBlockAndUpdate(pos.east(), ModBlocks.CHARGER.get().defaultBlockState());
                     final var charger = (ChargerBlockEntity) level.getBlockEntity(pos.east());
@@ -161,11 +171,17 @@ public final class NativeHostsProcessRestartGameTests {
                     }
                 } else if (addon) host.setItem(0, card);
             }
-            case "rack" -> {
+            case "rack", "rackdrive" -> {
                 level.setBlockAndUpdate(pos, ModBlocks.RACK.get().defaultBlockState());
                 final var rack = (RackBlockEntity) level.getBlockEntity(pos); rack.setItem(0, new ItemStack(ModItems.SERVER_TIER1.get()));
                 final var items = (Container) rack.getMountable(0); items.setItem(2, cpu); items.setItem(4, ram); items.setItem(8, eeprom);
-                if (addon) items.setItem(0, card);
+                if (fixture.kind.equals("rackdrive")) {
+                    rack.setItem(1, new ItemStack(ModItems.DISK_DRIVE_MOUNTABLE.get()));
+                    final var data = card.get(DataComponents.CUSTOM_DATA).copyTag(); data.putBoolean("oc_api_smoke_floppy", true);
+                    card.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+                    ((Container) rack.getMountable(1)).setItem(0, card);
+                    rack.connect(0, -1, Direction.SOUTH); rack.connect(1, -1, Direction.SOUTH);
+                } else if (addon) items.setItem(0, card);
             }
             case "microcontroller" -> {
                 level.setBlockAndUpdate(pos, ModBlocks.MICROCONTROLLER_TIER1.get().defaultBlockState());
